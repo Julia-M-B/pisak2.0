@@ -1,5 +1,5 @@
 import copy
-from typing import Optional
+from typing import Optional, Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QLayout
@@ -17,16 +17,17 @@ class PisakContainerWidget(PisakScannableWidget):
     """
     def __init__(self, parent, strategy = BackToParentStrategy()):
         super().__init__(parent)
-        self._items = []  # PisakContainerWidget przechowuje inne obiekty, niekoniecznie skanowalne (stad potrzeba na dwie listy obiektow-dzieci)
+        # zamiast listy jest set, zeby miec pewnosc, ze jeden obiekt nie zostanie dodany wielokrotnie
+        self._items = set()  # PisakContainerWidget przechowuje inne obiekty, niekoniecznie skanowalne (stad potrzeba na dwa zbiory obiektow-dzieci)
         self._scanning_strategy = strategy
         self._layout: Optional[QLayout] = None
 
     @property
-    def items(self):
+    def items(self) -> set[Any]:
         return copy.copy(self._items)
 
     @property
-    def layout(self):
+    def layout(self) -> Optional[QLayout]:
         return self._layout
 
     def add_item(self, item) -> None:
@@ -35,10 +36,10 @@ class PisakContainerWidget(PisakScannableWidget):
         Przy okazji dodawania obiektu do `self._items` wywolywana jest takze metoda `add_scannable_item`,
         ktora dodaje obiekt `item` do obiektow skanowalnych, ale tylko jesli jest on PisakScannableItem
         """
-        self._items.append(item)
+        self._items.add(item)
         self.add_scannable_item(item)
 
-    def highlight_self(self):
+    def highlight_self(self) -> None:
         """
         Nadpisanie metody `highlight_self` z interfejsu PisakScannableItems.
         W przypadku widgetow-kontenerow podswietlenie siebie jest rownoznaczne z
@@ -47,7 +48,7 @@ class PisakContainerWidget(PisakScannableWidget):
         for scannable_item in self._scannable_items:
             scannable_item.highlight_self()
 
-    def reset_highlight_self(self):
+    def reset_highlight_self(self) -> None:
         """
         Nadpisanie metody `reset_highlight_self` z interfejsu PisakScannableItems.
         W przypadku widgetow-kontenerow zakonczenie podswietlania siebie jest rownoznaczne z
@@ -64,7 +65,7 @@ class PisakContainerWidget(PisakScannableWidget):
             self._layout.addWidget(item)
         self.setLayout(self._layout)
 
-    def init_ui(self):
+    def init_ui(self) -> None:
         self.setFocusPolicy(Qt.StrongFocus)
 
 
