@@ -127,44 +127,45 @@ class ScanningManager(EventEmitter):
         from pisak.widgets.buttons import PisakButton, ButtonType
         from pisak.components.keyboard import Keyboard
         if isinstance(activated_item, PisakButton):
-            # Find the keyboard that owns this button by walking up the parent chain
-            # Framework-agnostic approach: find parent Keyboard and call its handler directly
-            keyboard = None
-            widget = activated_item.parentWidget()
-            while widget:
-                if isinstance(widget, Keyboard):
-                    keyboard = widget
-                    break
-                widget = widget.parentWidget()
+            # # Find the keyboard that owns this button by walking up the parent chain
+            # # Framework-agnostic approach: find parent Keyboard and call its handler directly
+            # keyboard = None
+            # widget = activated_item.parentWidget()
+            # while widget:
+            #     if isinstance(widget, Keyboard):
+            #         keyboard = widget
+            #         break
+            #     widget = widget.parentWidget()
+            #
+            # # If we found the keyboard, trigger the button action through the event system
+            # if keyboard:
+            #     # Call keyboard's button handler directly - this is framework-agnostic
+            #     # It will emit the appropriate events (TEXT_INPUT, KEYBOARD_SWITCHED, etc.)
+            #     keyboard.on_button_clicked(activated_item)
+            # else:
+            #     # Fallback: emit BUTTON_CLICKED event directly
+            #     # This will be handled by any subscribed handlers
+            #     button_event = AppEvent(AppEventType.BUTTON_CLICKED, activated_item)
+            #     self.emit_event(button_event)
+            #
+            # # For SWITCHER buttons, don't restart scanning here - the StackedWidgetObserver
+            # # will handle starting scanning on the new keyboard after the switch completes
+            # if activated_item.button_type == ButtonType.SWITCHER:
+            #     return
+            self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
             
-            # If we found the keyboard, trigger the button action through the event system
-            if keyboard:
-                # Call keyboard's button handler directly - this is framework-agnostic
-                # It will emit the appropriate events (TEXT_INPUT, KEYBOARD_SWITCHED, etc.)
-                keyboard.on_button_clicked(activated_item)
-            else:
-                # Fallback: emit BUTTON_CLICKED event directly
-                # This will be handled by any subscribed handlers
-                button_event = AppEvent(AppEventType.BUTTON_CLICKED, activated_item)
-                self.emit_event(button_event)
-            
-            # For SWITCHER buttons, don't restart scanning here - the StackedWidgetObserver
-            # will handle starting scanning on the new keyboard after the switch completes
-            if activated_item.button_type == ButtonType.SWITCHER:
-                return
-            
-            # After triggering click, handle scanning reset for non-switcher buttons
-            strategy = parent_item.scanning_strategy if parent_item else activated_item.scanning_strategy
-            if strategy:
-                target_for_strategy = parent_item if parent_item else activated_item
-                next_target = strategy.reset_scan(target_for_strategy)
-                if isinstance(next_target, PisakScannableItem):
-                    self.start_scanning(next_target)
-                else:
-                    self.emit_event(AppEvent(AppEventType.SCANNING_RESET, next_target))
-            else:
-                self.emit_event(AppEvent(AppEventType.SCANNING_RESET, None))
-            return
+            # # After triggering click, handle scanning reset for non-switcher buttons
+            # strategy = parent_item.scanning_strategy if parent_item else activated_item.scanning_strategy
+            # if strategy:
+            #     target_for_strategy = parent_item if parent_item else activated_item
+            #     next_target = strategy.reset_scan(target_for_strategy)
+            #     if isinstance(next_target, PisakScannableItem):
+            #         self.start_scanning(next_target)
+            #     else:
+            #         self.emit_event(AppEvent(AppEventType.SCANNING_RESET, next_target))
+            # else:
+            #     self.emit_event(AppEvent(AppEventType.SCANNING_RESET, None))
+            # return
 
         # Stop current scanning
         self.stop_scanning()

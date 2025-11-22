@@ -1,14 +1,14 @@
 from typing_extensions import Protocol
 
-from pisak.events import AppEvent, AppEventType, BaseEvent
+from pisak.events import AppEvent, AppEventType
 
 
 class EventHandler(Protocol):
     """
     Protokol EventHandlera. Zeby obiekt byl rozpoznawany jako EventHandler
-    musi implementowac metode `.handle_event(event: BaseEvent)`.
+    musi implementowac metode `.handle_event(event: AppEvent)`.
     """
-    def handle_event(self, event: BaseEvent):
+    def handle_event(self, event: AppEvent):
         ...
 
 

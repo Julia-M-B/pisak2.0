@@ -305,7 +305,7 @@ class PisakDisplay(QLabel):
         self.setText(full_html)
 
 
-class TextDisplayObserver:
+class TextEditionHandler:
     """Observer that handles text display events from virtual keyboard"""
     
     def __init__(self, text_display: PisakDisplay):

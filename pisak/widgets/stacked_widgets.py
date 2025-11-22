@@ -1,29 +1,26 @@
+import copy
+
 from PySide6.QtWidgets import QStackedWidget
 
-from pisak.emitters import EventEmitter
 from pisak.events import AppEvent, AppEventType
 from pisak.scanning.scannable import PisakScannableItem
 
-class PisakStackedWidget(EventEmitter, QStackedWidget, PisakScannableItem):
+class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     """
     Przechowuje różne obiekty i zarządza ich wyświetlaniem:
     - np. może wyświetlać różne keyboardy lub może wyświetlać różne moduły
     """
 
     def __init__(self, parent):
-        # Initialize parent classes explicitly to avoid MRO issues
-        EventEmitter.__init__(self)
-        QStackedWidget.__init__(self, parent)
-        # PisakScannableItem is a protocol/mixin, no __init__ needed
+        # QStackedWidget.__init__(self, parent)
+        super().__init__(parent)
         self._items_dict = {}
-        self._items = []
-        self._scannable_items = []
+        self._stacked_items = []
+        self._current_scannable_items = []
 
-    def add_item(self, item):
-        self._items.append(item)
+    def stack_item(self, item):
+        self._stacked_items.append(item)
         self.addWidget(item)
-        if isinstance(item, PisakScannableItem):
-            self._scannable_items.append(item)
 
     def add_item_reference(self, item, key):
         if key not in self._items_dict.keys():
@@ -34,6 +31,10 @@ class PisakStackedWidget(EventEmitter, QStackedWidget, PisakScannableItem):
     # todo dodać jakieś ogólne typowanie, że klucz to ma być typ obiektu
     def get_item_by_key(self, key):
         return self._items_dict.get(key, None)
+
+    @property
+    def stacked_items(self) -> list:
+        return copy.copy(self._stacked_items)
 
     @property
     def scannable_items(self):
@@ -60,74 +61,56 @@ class PisakStackedWidget(EventEmitter, QStackedWidget, PisakScannableItem):
             return next(self._iter_items)
         raise StopIteration
 
-    # TODO dodać funkcję, która będzie zarządzała wyświetlaniem obiektów
-    #  należących do PisakStackedWidget -> jak zmieni wyświetlany obiekt,
-    #  to musi wysyłać sygnał do scanning managera, że obiekt został zmieniony
-    #  wtedy scanning manager będzie kończył jedno skanowanie i rozpoczynał drugie
     def switch_shown_item(self, new_item):
         """
         Funkcja zmieniająca wyświetlany widget.
         Po zmianie wyświetlanego widgetu, emitowany jest sygnał "ITEMS_SWITCHED"
         zawierający informację o tym, jaki teraz jest wyświetlany widget (aby
         móc rozpocząć jego skanownanie)
-
-        :param new_item:
-        :return:
         """
-        if new_item in self._items:
+        if new_item in self._stacked_items:
             self.setCurrentWidget(new_item)
-            event = AppEvent(AppEventType.ITEMS_SWITCHED, new_item)
-            self.emit_event(event)
 
 
-class StackedWidgetObserver:
+class ItemSwitchedHandler:
     """Observer that handles stacked widget events for scanning manager"""
     
-    def __init__(self, scanning_manager):
+    def __init__(self, scanning_manager, stacked_widget):
         self._scanning_manager = scanning_manager
+        self._stacked_widget = stacked_widget
 
     def handle_event(self, event: AppEvent) -> None:
         """Handle items switched event - stop scanning old keyboard, start scanning new one"""
         if event.type == AppEventType.ITEMS_SWITCHED:
-            new_keyboard = event.data
-            from pisak.scanning.scannable import PisakScannableItem
-            
-            # Check if scanning is currently active and get the old keyboard reference
-            was_scanning = self._scanning_manager.is_scanning
-            old_keyboard = self._scanning_manager.current_item if was_scanning else None
-            
-            # Stop scanning the old keyboard completely
-            if was_scanning:
-                # Clear iterator state on old keyboard to prevent stale references
-                if old_keyboard and hasattr(old_keyboard, '_iter_scannable_items'):
-                    old_keyboard._iter_scannable_items = None
-                if old_keyboard:
-                    old_keyboard.iter_counter = 0
-                
-                self._scanning_manager.stop_scanning()
-            
-            # Verify we're not scanning anymore before starting new scan
-            if self._scanning_manager.is_scanning:
-                # If still scanning, force stop
-                self._scanning_manager.stop_scanning()
-            
-            # If scanning was active and new keyboard is scannable, start scanning it
-            if was_scanning and isinstance(new_keyboard, PisakScannableItem):
-                scannable_items = getattr(new_keyboard, 'scannable_items', [])
-            if len(scannable_items) > 0:
-                # Verify old keyboard is different from new keyboard
-                if old_keyboard != new_keyboard:
-                    
-                    # Clear any existing iterator state on new keyboard
-                    if hasattr(new_keyboard, '_iter_scannable_items'):
-                        new_keyboard._iter_scannable_items = None
-                    new_keyboard.iter_counter = 0
-                    
-                    # Ensure we're definitely not scanning before starting
-                    if self._scanning_manager.is_scanning:
-                        self._scanning_manager.stop_scanning()
-                    
-                    # Start scanning the new keyboard
-                    self._scanning_manager.start_scanning(new_keyboard)
+            item_reference = event.data
+            new_item = self._stacked_widget.get_item_by_key(item_reference)
+            if new_item:
+                self._stacked_widget.switch_shown_item(new_item)
+                from pisak.scanning.scannable import PisakScannableItem
+
+                # Check if scanning is currently active and get the old keyboard reference
+                was_scanning = self._scanning_manager.is_scanning
+                old_keyboard = self._scanning_manager.current_item if was_scanning else None
+
+                # Stop scanning the old keyboard completely
+                if was_scanning:
+                    # Clear iterator state on old keyboard to prevent stale references
+                    if old_keyboard and hasattr(old_keyboard, "_iter_scannable_items"):
+                        old_keyboard._iter_scannable_items = None
+                    if old_keyboard:
+                        old_keyboard.iter_counter = 0
+
+                    self._scanning_manager.stop_scanning()
+
+                # If scanning was active and new keyboard is scannable, start scanning it
+                if was_scanning and isinstance(new_item, PisakScannableItem):
+                    scannable_items = getattr(new_item, "scannable_items", [])
+                    if scannable_items:
+                        # Clear any existing iterator state on new keyboard
+                        if hasattr(new_item, '_iter_scannable_items'):
+                            new_item._iter_scannable_items = None
+                        new_item.iter_counter = 0
+                        self._scanning_manager.start_scanning(new_item)
+
 
 

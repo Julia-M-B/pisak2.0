@@ -46,7 +46,7 @@ class PisakContainerWidget(PisakScannableWidget):
         W przypadku widgetow-kontenerow podswietlenie siebie jest rownoznaczne z
         podswietleniem wszystkich swoich dzieci na raz.
         """
-        for scannable_item in self._scannable_items:
+        for scannable_item in self._current_scannable_items:
             scannable_item.highlight_self()
 
     def reset_highlight_self(self) -> None:
@@ -55,7 +55,7 @@ class PisakContainerWidget(PisakScannableWidget):
         W przypadku widgetow-kontenerow zakonczenie podswietlania siebie jest rownoznaczne z
         zakonczeniem podswietlenia wszystkich swoich dzieci na raz.
         """
-        for scannable_item in self._scannable_items:
+        for scannable_item in self._current_scannable_items:
             scannable_item.reset_highlight_self()
 
     def set_layout(self) -> None:

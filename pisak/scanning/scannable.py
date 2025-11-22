@@ -12,7 +12,7 @@ class PisakScannableItem:
 
     def __init__(self, *args, **kwargs):
         self._id: str = self._get_id()
-        self._scannable_items: list[Any] = []
+        self._current_scannable_items: list[Any] = []
         self._scanning_strategy: Optional[BaseStrategy] = None
         self._iter_counter: int = 0  # liczy, ile razy zostala wykonana iteracja na skanowalnych obiektach-dzieciach
 
@@ -26,7 +26,7 @@ class PisakScannableItem:
         """
         Iterate through scannable items
         """
-        self._iter_scannable_items = iter(self._scannable_items)
+        self._iter_scannable_items = iter(self._current_scannable_items)
         return self
 
     def __next__(self):
@@ -39,7 +39,7 @@ class PisakScannableItem:
 
     @property
     def scannable_items(self) -> list[Any]:
-        return copy.copy(self._scannable_items)
+        return copy.copy(self._current_scannable_items)
 
     @property
     def scanning_strategy(self) -> Optional[BaseStrategy]:
@@ -97,8 +97,8 @@ class PisakScannableWidget(QWidget, PisakScannableItem):
         dodajemy go do listy skanowalnych obiektow-dzieci
         """
         if isinstance(item, PisakScannableItem):
-            if item not in self._scannable_items:
-                self._scannable_items.append(item)
+            if item not in self._current_scannable_items:
+                self._current_scannable_items.append(item)
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         """

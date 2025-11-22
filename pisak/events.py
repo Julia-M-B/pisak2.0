@@ -19,7 +19,6 @@ class AppEventType(Enum):
     CURSOR_MOVED_LEFT = auto()  # event przesuniecia kursora w lewo
     CURSOR_MOVED_RIGHT = auto()  # event przesuniecia kursora w prawo
     # Keyboard switching events
-    KEYBOARD_SWITCHED = auto()  # event zmiany klawiatury
     ITEMS_SWITCHED = auto()  # event zmiany wyswietlanych elementow (np. w stacked widget)
 
 

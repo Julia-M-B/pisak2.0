@@ -19,10 +19,8 @@ from PySide6.QtCore import Qt
 
 from pisak.components.display_keyboard_component import KeyboardDisplayComponent
 from pisak.modules.base_module import PisakBaseModule
-from pisak.widgets.stacked_widgets import StackedWidgetObserver
 from pisak.adapters import KeyPressAdapter
 from pisak.events import AppEvent, AppEventType
-from pisak.handlers import EventHandler
 
 
 class PisakSpellerModule(PisakBaseModule):
@@ -44,17 +42,11 @@ class PisakSpellerModule(PisakBaseModule):
         # - Text display widget (ignores real keyboard input)
         # - Virtual keyboard with buttons
         # - Event connections: keyboard -> text display observer
-        self._keyboard_component = KeyboardDisplayComponent(self.centralWidget())
-
-        # Subscribe to stacked widget events for scanning management
-        # This handles keyboard switching events
-        self._keyboard_component._keyboards.subscribe(
-            StackedWidgetObserver(self._scanning_manager)
-        )
+        self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
         
         # Set up keyboard adapter to capture key "1" for scanning control
         self._key_adapter = KeyPressAdapter(self, parent=self)
-        self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self._keyboard_component._keyboards))
+        self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self._keyboard_component.keyboards))
 
         self.init_ui()
 
@@ -63,7 +55,7 @@ class PisakSpellerModule(PisakBaseModule):
         self.centralWidget().set_layout()
 
 
-class ScanningKeyHandler(EventHandler):
+class ScanningKeyHandler:
     """Handler for key "1" to control scanning"""
     
     def __init__(self, scanning_manager, keyboards_container):
