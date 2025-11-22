@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QFontMetrics, QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
+from pisak.adapters import TimerAdapter
 from pisak.events import AppEvent, AppEventType
 import html
 
@@ -15,18 +16,21 @@ class PisakDisplay(QLabel):
     def __init__(self, parent):
         super().__init__(parent=parent)
 
+        # cursor settings
         self._cursor_index: int = 0
         self._cursor_visible: bool = True
-        self._cursor_timer = QTimer()
-        self._cursor_timer.timeout.connect(self.toggle_cursor)
-        self._cursor_timer.start(500)
+        self._cursor_timer = TimerAdapter(500)
+        self._cursor_timer.start()
+        self._cursor_handler = CursorToggleHandler(self)
+        self._cursor_timer.subscribe(self._cursor_handler)
+
         self._text = ""
-        
-        # Metrics for layout
-        self._font_metrics = QFontMetrics(self.font())
-        self._max_lines = 1
+        self._displayed_text = ""
 
         self.init_ui()
+
+        self._max_lines = 1
+
         # Initialize with empty text to ensure proper display
         self.update_display()
 
@@ -52,7 +56,7 @@ class PisakDisplay(QLabel):
         return self._text
 
     def init_ui(self):
-        self.setFont(QFont("Arial", 30))
+        self.setFont(QFont("Arial", 40))
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # Align text to top-left for better multiline support
         self.setLineWidth(10)
         # We handle wrapping manually now to support custom pagination
@@ -329,3 +333,20 @@ class TextEditionHandler:
             self._text_display.move_cursor_right()
         elif event.type == AppEventType.CURSOR_MOVED_LEFT:
             self._text_display.move_cursor_left()
+
+class CursorToggleHandler:
+    """
+     Handler of cursor toggling
+     """
+
+    def __init__(self, text_display: PisakDisplay):
+        self._text_display = text_display
+
+    @property
+    def text_display(self):
+        return self._text_display
+
+    def handle_event(self, event: AppEvent) -> None:
+        """Handle timer timeout event to toggle cursor"""
+        if event.type == AppEventType.TIMER_TIMEOUT:
+            self._text_display.toggle_cursor()
