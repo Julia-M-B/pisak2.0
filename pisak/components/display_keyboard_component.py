@@ -22,12 +22,12 @@ class KeyboardDisplayComponent:
         self._lower_letters = Keyboard(parent=self._keyboards)
         self._lower_letters.implement_layout_from_config(lowercase_config)
         self._keyboards.add_item_reference(self._lower_letters, KeyboardType.LOWERCASE)
-        self._keyboards.stack_item(self._lower_letters)
+        self._keyboards.add_item(self._lower_letters)
 
         self._upper_letters = Keyboard(parent=self._keyboards)
         self._upper_letters.implement_layout_from_config(uppercase_config)
         self._keyboards.add_item_reference(self._upper_letters, KeyboardType.UPPERCASE)
-        self._keyboards.stack_item(self._upper_letters)
+        self._keyboards.add_item(self._upper_letters)
 
         self._keyboards.switch_shown_item(self._upper_letters)
 
