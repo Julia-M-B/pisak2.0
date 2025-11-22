@@ -4,6 +4,7 @@ from typing import Any
 from PySide6.QtWidgets import QMainWindow, QSizePolicy
 from PySide6.QtCore import Qt as QtCore
 
+from pisak.scanning.manager import ScanningManager
 from pisak.widgets.containers import PisakGridWidget
 
 class PisakBaseModule(QMainWindow):
@@ -18,6 +19,7 @@ class PisakBaseModule(QMainWindow):
         super().__init__(parent)
         self._title: str = title
         self._items: set[Any] = set()
+        self._scanning_manager = ScanningManager()
         self.setCentralWidget(PisakGridWidget(parent=self))
 
     def __str__(self) -> str:

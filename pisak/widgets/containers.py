@@ -17,13 +17,13 @@ class PisakContainerWidget(PisakScannableWidget):
     """
     def __init__(self, parent, strategy = BackToParentStrategy()):
         super().__init__(parent)
-        # zamiast listy jest set, zeby miec pewnosc, ze jeden obiekt nie zostanie dodany wielokrotnie
-        self._items = set()  # PisakContainerWidget przechowuje inne obiekty, niekoniecznie skanowalne (stad potrzeba na dwa zbiory obiektow-dzieci)
+        # Changed to list to preserve order, using check for uniqueness
+        self._items = []  # PisakContainerWidget przechowuje inne obiekty, niekoniecznie skanowalne
         self._scanning_strategy = strategy
         self._layout: Optional[QLayout] = None
 
     @property
-    def items(self) -> set[Any]:
+    def items(self) -> list[Any]:
         return copy.copy(self._items)
 
     @property
@@ -36,8 +36,9 @@ class PisakContainerWidget(PisakScannableWidget):
         Przy okazji dodawania obiektu do `self._items` wywolywana jest takze metoda `add_scannable_item`,
         ktora dodaje obiekt `item` do obiektow skanowalnych, ale tylko jesli jest on PisakScannableItem
         """
-        self._items.add(item)
-        self.add_scannable_item(item)
+        if item not in self._items:
+            self._items.append(item)
+            self.add_scannable_item(item)
 
     def highlight_self(self) -> None:
         """
@@ -77,6 +78,47 @@ class PisakGridWidget(PisakContainerWidget):
     def __init__(self, parent, strategy = BackToParentStrategy()):
         super().__init__(parent, strategy)
         self._layout = QGridLayout()
+
+    def set_layout(self) -> None:
+        """
+        Ustawienie layoutu widgetu w gridzie - pozycjonuje elementy wierszami
+        Display widgets (PisakDisplay) are always placed first (row 0), then other items
+        """
+        from pisak.widgets.text_display import PisakDisplay
+        
+        # Separate display from other items to ensure display is always on top
+        display_items = []
+        other_items = []
+        for item in self._items:
+            if isinstance(item, PisakDisplay):
+                display_items.append(item)
+            else:
+                other_items.append(item)
+        
+        # Configure grid for 2/3 width display (centered)
+        # Columns: 0=Spacer(1), 1=Display(4), 2=Spacer(1) -> Total 6, Display=4/6=2/3
+        self._layout.setColumnStretch(0, 1)
+        self._layout.setColumnStretch(1, 4)
+        self._layout.setColumnStretch(2, 1)
+
+        # Add display first (row 0)
+        row = 0
+        for item in display_items:
+            # Display in center column
+            self._layout.addWidget(item, row, 1)
+            # Set row stretch to 1 to ensure it takes substantial height (e.g. 1/2 if there's one other item)
+            self._layout.setRowStretch(row, 1)
+            row += 1
+            
+        # Add other items (keyboards) spanning all columns
+        for item in other_items:
+            # Span all 3 columns
+            self._layout.addWidget(item, row, 0, 1, 3)
+            # Set row stretch to 1 to share height equally with display
+            self._layout.setRowStretch(row, 1)
+            row += 1
+            
+        self.setLayout(self._layout)
 
 
 class PisakColumnWidget(PisakContainerWidget):

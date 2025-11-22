@@ -22,7 +22,7 @@ class ScanningState:
         self.is_scanning = state
         return self
 
-    def set_current_item(self, item: PisakScannableItem) -> Self:
+    def set_current_item(self, item: Optional[PisakScannableItem]) -> Self:
         self.current_item = item
         return self
 
@@ -53,16 +53,21 @@ class ScanningManager(EventEmitter):
 
     def start_scanning(self, item: PisakScannableItem) -> None:
         """Start scanning a scannable item"""
+        # Stop any existing scanning first
         if self._scanning_state.is_scanning:
             self.stop_scanning()
-
+        
+        # Ensure timer is stopped before starting new scan
+        if self._timer.is_active():
+            self._timer.stop()
+        
+        # Set new scanning state (this increments scan_id)
         self._scanning_state.set_is_scanning(True).set_current_item(item).set_loops_counter(0)
+
+        iter(item)
 
         # Start timer
         self._timer.start()
-
-        # Initialize iterator
-        iter(item)
 
         # Emit event
         self.emit_event(AppEvent(AppEventType.SCANNING_STARTED, item))
@@ -74,10 +79,13 @@ class ScanningManager(EventEmitter):
             return
 
         self._timer.stop()
-        self._scanning_state.set_is_scanning(False)
-
+        
+        # Reset iterator counter on old item before clearing it
         if self._scanning_state.current_item:
             self._scanning_state.current_item.iter_counter = 0
+        
+        # Clear current item and set scanning to False
+        self._scanning_state.set_is_scanning(False).set_current_item(None)
 
         self.emit_event(AppEvent(AppEventType.SCANNING_STOPPED))
 
@@ -114,6 +122,50 @@ class ScanningManager(EventEmitter):
         Funkcja okreslajaca, jak nalzey zachowac sie, gdy obiekt zostal aktywowany.
         W zaleznosci od typu aktywowanego obiektu, nalezy podjac rozne dzialania.
         """
+        # Check if activated item is a button - if so, trigger button action via event system
+        # This ensures button clicks work both from mouse and scanning activation
+        from pisak.widgets.buttons import PisakButton, ButtonType
+        from pisak.components.keyboard import Keyboard
+        if isinstance(activated_item, PisakButton):
+            # Find the keyboard that owns this button by walking up the parent chain
+            # Framework-agnostic approach: find parent Keyboard and call its handler directly
+            keyboard = None
+            widget = activated_item.parentWidget()
+            while widget:
+                if isinstance(widget, Keyboard):
+                    keyboard = widget
+                    break
+                widget = widget.parentWidget()
+            
+            # If we found the keyboard, trigger the button action through the event system
+            if keyboard:
+                # Call keyboard's button handler directly - this is framework-agnostic
+                # It will emit the appropriate events (TEXT_INPUT, KEYBOARD_SWITCHED, etc.)
+                keyboard.on_button_clicked(activated_item)
+            else:
+                # Fallback: emit BUTTON_CLICKED event directly
+                # This will be handled by any subscribed handlers
+                button_event = AppEvent(AppEventType.BUTTON_CLICKED, activated_item)
+                self.emit_event(button_event)
+            
+            # For SWITCHER buttons, don't restart scanning here - the StackedWidgetObserver
+            # will handle starting scanning on the new keyboard after the switch completes
+            if activated_item.button_type == ButtonType.SWITCHER:
+                return
+            
+            # After triggering click, handle scanning reset for non-switcher buttons
+            strategy = parent_item.scanning_strategy if parent_item else activated_item.scanning_strategy
+            if strategy:
+                target_for_strategy = parent_item if parent_item else activated_item
+                next_target = strategy.reset_scan(target_for_strategy)
+                if isinstance(next_target, PisakScannableItem):
+                    self.start_scanning(next_target)
+                else:
+                    self.emit_event(AppEvent(AppEventType.SCANNING_RESET, next_target))
+            else:
+                self.emit_event(AppEvent(AppEventType.SCANNING_RESET, None))
+            return
+
         # Stop current scanning
         self.stop_scanning()
 
@@ -146,13 +198,24 @@ class ScanningManager(EventEmitter):
         """
         Handle timer timeout - focus next item
         """
+        # Double-check scanning state - this prevents stale timer callbacks from affecting new scans
         if not self._scanning_state.is_scanning or not self._scanning_state.current_item:
             return
 
+        # # Verify this callback is for the current scan session (not a stale callback)
+        # if self._scanning_state.scan_id != self._active_scan_id:
+        #     # This is a stale callback from a previous scan session, ignore it
+        #     return
+
         current_item = self._scanning_state.current_item
+        
+        # Verify current_item is still valid (not None)
+        if not current_item:
+            return
 
         # Check if we've completed all loops
-        if current_item.iter_counter >= self._scanning_state.max_loop_number * len(current_item.scannable_items):
+        scannable_items = getattr(current_item, 'scannable_items', [])
+        if current_item.iter_counter >= self._scanning_state.max_loop_number * len(scannable_items):
             self._reset_scanning()
             return
 
