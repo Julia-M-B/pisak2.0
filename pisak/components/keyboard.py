@@ -2,10 +2,8 @@ from enum import Enum, auto
 import yaml
 from pisak.emitters import EventEmitter
 from pisak.events import AppEvent, AppEventType
-from pisak.adapters import ButtonClickAdapter
 from pisak.widgets.containers import PisakColumnWidget, PisakRowWidget
 from pisak.widgets.buttons import PisakButtonBuilder, PisakButton, ButtonType
-from pisak.widgets.stacked_widgets import PisakStackedWidget
 
 class KeyboardType(Enum):
     UPPERCASE = auto()
@@ -18,35 +16,14 @@ KEYBOARD_TYPES_MAP = {
     "numerical": KeyboardType.NUMERICAL
 }
 
-class Keyboard(EventEmitter, PisakColumnWidget):
-    def __init__(self, parent=None, keyboard_layout=None, keyboard_dim=(4, 7)):
-        # Initialize parent classes explicitly to avoid MRO issues
-        EventEmitter.__init__(self)
-        PisakColumnWidget.__init__(self, parent)
-        self._keyboard_layout = keyboard_layout
-        self._keyboard_dim = keyboard_dim
+class Keyboard(PisakColumnWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self._buttons = []
 
     @property
     def buttons(self):
         return self._buttons
-
-    @staticmethod
-    def numerical(parent):
-        """
-        Metoda tworzy i zwraca obiekt typu 'Keyboard' z numerami
-        :param: parent — rodzic utworzonej klawiatury
-        """
-        keyboard_dim = (4, 3)
-        horizontal_size = keyboard_dim[1]
-        list_of_numbers = [x for x in range(9, -1, -1)]
-        keyboard_layout = [
-            sorted(list_of_numbers[i : i + horizontal_size])
-            for i in range(0, len(list_of_numbers) + 1, horizontal_size)
-        ]
-        return Keyboard(
-            parent=parent, keyboard_layout=keyboard_layout, keyboard_dim=keyboard_dim
-        )
 
     def implement_layout_from_config(self, config_path: str):
         with open(config_path, "r") as f:
@@ -69,8 +46,11 @@ class Keyboard(EventEmitter, PisakColumnWidget):
         self.set_layout()
 
 class ButtonManager(EventEmitter):
+    """
+    Manager przyciskow - gdy przycisk zostanie klikniety, to, w zaleznosci od typu przycisku,
+    emituje odpowiedni rodzaj eventu.
+    """
     def on_button_clicked(self, button: PisakButton):
-        """Handle button click and emit appropriate event"""
         match button.button_type:
             case ButtonType.SPACE:
                 self.emit_event(AppEvent(AppEventType.SPACE_ADDED))
@@ -85,14 +65,18 @@ class ButtonManager(EventEmitter):
             case ButtonType.SWITCHER:
                 if button.additional_data is not None:
                     self.emit_event(AppEvent(AppEventType.ITEMS_SWITCHED, button.additional_data))
-            case ButtonType.CHARACTER:
+            case ButtonType.TEXT:
                 self.emit_event(AppEvent(AppEventType.TEXT_INPUT, button.text))
             case _:
                 self.emit_event(AppEvent(AppEventType.TEXT_INPUT, button.text))
 
 
 class ButtonClickHandler:
-    """Handler that converts button click events to keyboard actions"""
+    """
+    Obserwuje scanning managera (ktory wysyla event, ze przycisk zostal klikniety),
+    gdy aktywowany obiekt to PisakButton.
+    Przekazuje managerowi przyciskow informacje o tym, ze przycisk zostal klikniety (oraz jaki to byl przycisk).
+    """
     
     def __init__(self, button_manager: ButtonManager):
         self._button_manager = button_manager
