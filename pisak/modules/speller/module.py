@@ -57,8 +57,8 @@ class PisakSpellerModule(PisakBaseModule):
         
         # Apply Stretches
         self.centralWidget().layout.setStretch(0, 1)
-        self.centralWidget().layout.setStretch(1, 2)
-        self.centralWidget().layout.setStretch(2, 4)
+        self.centralWidget().layout.setStretch(1, 1)
+        self.centralWidget().layout.setStretch(2, 3)
 
         # Set up scanning to control the Main Row (switching between WordColumn and RightColumn)
         self._key_adapter = KeyPressAdapter(self, parent=self)
