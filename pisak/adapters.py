@@ -7,7 +7,7 @@ wszystkie powiazania miedzy sygnalami a eventami sa zalatwiane przez adaptery, k
 sygnalu PySide'owego na wewnetrzny event.
 """
 from typing import Optional
-from PySide6.QtWidgets import QWidget, QPushButton
+from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QKeyEvent
 
@@ -24,25 +24,6 @@ class QtEventAdapter(EventEmitter, QObject):
     def __init__(self, parent: Optional[QObject] = None):
         QObject.__init__(self, parent)
         EventEmitter.__init__(self)
-
-
-class ButtonClickAdapter(QtEventAdapter):
-    """
-    Adapter sygnalu klikniecia na przycisk (`.clicked`).
-    Gdy przycisk zostaje klikniety, adapter emituje odpowiedni event (BUTTON_CLICKED)
-    """
-
-    def __init__(self, button: QPushButton, parent: Optional[QObject] = None):
-        super().__init__(parent)
-        self._button = button
-        # Connect Qt signal to our event system
-        button.clicked.connect(self._on_button_clicked)
-
-    def _on_button_clicked(self):
-        """Convert Qt clicked signal to AppEvent"""
-        event = AppEvent(AppEventType.BUTTON_CLICKED, self._button)
-        self.emit_event(event)
-
 
 class KeyPressAdapter(QtEventAdapter):
     """
@@ -71,41 +52,6 @@ class KeyPressAdapter(QtEventAdapter):
             'modifiers': event.modifiers()
         })
         self.emit_event(app_event)
-
-
-class FocusAdapter(QtEventAdapter):
-    """
-    Adapter dla PySide'owych eventow zwiazanych ze zmianami focusu.
-    Do implementacji focusowych eventow danego widgetu dodaje emitowanie
-    odpowiedniego wewnetrznego eventu (troche dziala jak dekorator).
-    """
-
-    def __init__(self, widget: QWidget, parent: Optional[QObject] = None):
-        super().__init__(parent)
-        self._widget = widget
-        self._original_focus_in = widget.focusInEvent
-        self._original_focus_out = widget.focusOutEvent
-
-        # Override focus events
-        widget.focusInEvent = self._on_focus_in
-        widget.focusOutEvent = self._on_focus_out
-
-    def _on_focus_in(self, event):
-        """Convert Qt focusInEvent to AppEvent"""
-        if self._original_focus_in:
-            self._original_focus_in(event)
-
-        app_event = AppEvent(AppEventType.WIDGET_FOCUSED, self._widget)
-        self.emit_event(app_event)
-
-    def _on_focus_out(self, event):
-        """Convert Qt focusOutEvent to AppEvent"""
-        if self._original_focus_out:
-            self._original_focus_out(event)
-
-        app_event = AppEvent(AppEventType.WIDGET_UNFOCUSED, self._widget)
-        self.emit_event(app_event)
-
 
 class TimerAdapter(QtEventAdapter):
     """Adapter for timer events - converts QTimer to event-based system"""
