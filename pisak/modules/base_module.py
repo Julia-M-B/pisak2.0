@@ -5,22 +5,20 @@ from PySide6.QtWidgets import QMainWindow, QSizePolicy
 from PySide6.QtCore import Qt as QtCore
 
 from pisak.scanning.manager import ScanningManager
-from pisak.widgets.containers import PisakGridWidget
+from pisak.widgets.containers import PisakContainerWidget
 
 class PisakBaseModule(QMainWindow):
     """
     Podstawowe okno w aplikacji Pisak.
     Wszystkie moduly apliakacji (speller, symboler, etc) dziedzicza po tym oknie.
 
-    Jego centralnym widgetem jest PisakGridWidget - domyslnie obiekty widoczne w glownym oknie
-    danego modulu sa rozmiesczone na zasadzie grida.
+    Jego centralnym widgetem jest PisakContainerWidget.
     """
     def __init__(self, parent=None, title=""):
         super().__init__(parent)
         self._title: str = title
         self._items: set[Any] = set()
         self._scanning_manager = ScanningManager()
-        self.setCentralWidget(PisakGridWidget(parent=self))
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__} name={self._title}"
@@ -37,6 +35,10 @@ class PisakBaseModule(QMainWindow):
         dodaje obiekt `item` do zbioru obiektow-dzieci
         """
         self._items.add(item)
+
+    def set_central_widget(self, widget: PisakContainerWidget):
+        widget.setParent(self)
+        self.setCentralWidget(widget)
 
     def init_ui(self) -> None:
         """
