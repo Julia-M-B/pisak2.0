@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QStackedWidget
 
 from pisak.events import AppEvent, AppEventType
 from pisak.scanning.scannable import PisakScannableItem
+from pisak.scanning.strategies import BackToParentStrategy
 
 class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     """
@@ -9,12 +10,47 @@ class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     - np. może wyświetlać różne keyboardy lub może wyświetlać różne moduły
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, scanning_strategy = BackToParentStrategy()):
         super().__init__(parent)
-        # PisakScannableItem is a protocol/mixin, no __init__ needed
+        self._scanning_strategy = scanning_strategy
+            
         self._items_dict = {}
         self._items = []
         self._scannable_items = []
+
+    def highlight_self(self) -> None:
+        """
+        Highlight the currently visible widget.
+        """
+        current_widget = self.currentWidget()
+        if current_widget and hasattr(current_widget, 'highlight_self'):
+            current_widget.highlight_self()
+
+    def reset_highlight_self(self) -> None:
+        """
+        Reset highlight on the currently visible widget.
+        """
+        current_widget = self.currentWidget()
+        if current_widget and hasattr(current_widget, 'reset_highlight_self'):
+            current_widget.reset_highlight_self()
+
+    def focusInEvent(self, event) -> None:
+        """
+        Handle focus in event to trigger highlighting.
+        """
+        if event.gotFocus():
+            self.highlight_self()
+        else:
+            super().focusInEvent(event)
+
+    def focusOutEvent(self, event) -> None:
+        """
+        Handle focus out event to reset highlighting.
+        """
+        if event.lostFocus():
+            self.reset_highlight_self()
+        else:
+            super().focusOutEvent(event)
 
     def add_item(self, item):
         self._items.append(item)
@@ -36,23 +72,6 @@ class PisakStackedWidget(QStackedWidget, PisakScannableItem):
         if current_widget and isinstance(current_widget, PisakScannableItem):
             return current_widget.scannable_items
         return []
-
-    def __iter__(self):
-        """Iterate through scannable items of the currently visible widget"""
-        current_widget = self.currentWidget()
-        if current_widget and isinstance(current_widget, PisakScannableItem):
-            # Delegate iteration to the current widget
-            self._iter_items = iter(current_widget)
-            return self
-        # Fallback to empty iterator if no current widget
-        self._iter_items = iter([])
-        return self
-
-    def __next__(self):
-        """Get next item from the current widget's iterator"""
-        if hasattr(self, '_iter_items'):
-            return next(self._iter_items)
-        raise StopIteration
 
     def switch_shown_item(self, new_item):
         """
