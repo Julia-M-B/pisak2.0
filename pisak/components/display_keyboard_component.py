@@ -43,10 +43,6 @@ class KeyboardDisplayComponent:
                                                       stacked_widget=self._keyboards)
         self._button_manager.subscribe(self._keyboards_handler)
 
-        # Add display first (will appear on top), then keyboards (will appear below)
-        self._parent.add_item(self._display)
-        self._parent.add_item(self._keyboards)
-
     @property
     def keyboards(self):
         return self._keyboards
