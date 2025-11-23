@@ -1,4 +1,3 @@
-import copy
 from typing import Optional, Any
 
 from PySide6.QtCore import Qt
@@ -24,7 +23,7 @@ class PisakContainerWidget(PisakScannableWidget):
 
     @property
     def items(self) -> list[Any]:
-        return copy.copy(self._items)
+        return self._items
 
     @property
     def layout(self) -> Optional[QLayout]:
@@ -78,47 +77,6 @@ class PisakGridWidget(PisakContainerWidget):
     def __init__(self, parent, strategy = BackToParentStrategy()):
         super().__init__(parent, strategy)
         self._layout = QGridLayout()
-
-    def set_layout(self) -> None:
-        """
-        Ustawienie layoutu widgetu w gridzie - pozycjonuje elementy wierszami
-        Display widgets (PisakDisplay) are always placed first (row 0), then other items
-        """
-        from pisak.widgets.text_display import PisakDisplay
-        
-        # Separate display from other items to ensure display is always on top
-        display_items = []
-        other_items = []
-        for item in self._items:
-            if isinstance(item, PisakDisplay):
-                display_items.append(item)
-            else:
-                other_items.append(item)
-        
-        # Configure grid for 2/3 width display (centered)
-        # Columns: 0=Spacer(1), 1=Display(4), 2=Spacer(1) -> Total 6, Display=4/6=2/3
-        self._layout.setColumnStretch(0, 1)
-        self._layout.setColumnStretch(1, 4)
-        self._layout.setColumnStretch(2, 1)
-
-        # Add display first (row 0)
-        row = 0
-        for item in display_items:
-            # Display in center column
-            self._layout.addWidget(item, row, 1)
-            # Set row stretch to 1 to ensure it takes substantial height (e.g. 1/2 if there's one other item)
-            self._layout.setRowStretch(row, 1)
-            row += 1
-            
-        # Add other items (keyboards) spanning all columns
-        for item in other_items:
-            # Span all 3 columns
-            self._layout.addWidget(item, row, 0, 1, 3)
-            # Set row stretch to 1 to share height equally with display
-            self._layout.setRowStretch(row, 1)
-            row += 1
-            
-        self.setLayout(self._layout)
 
 
 class PisakColumnWidget(PisakContainerWidget):
