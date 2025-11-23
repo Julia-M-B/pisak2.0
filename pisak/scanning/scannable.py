@@ -1,4 +1,3 @@
-import copy
 import uuid
 from typing import Self, Any, Optional
 
@@ -26,7 +25,7 @@ class PisakScannableItem:
         """
         Iterate through scannable items
         """
-        self._iter_scannable_items = iter(self._current_scannable_items)
+        self._iter_scannable_items = iter(self.scannable_items)
         return self
 
     def __next__(self):
@@ -39,7 +38,7 @@ class PisakScannableItem:
 
     @property
     def scannable_items(self) -> list[Any]:
-        return copy.copy(self._current_scannable_items)
+        return self._current_scannable_items
 
     @property
     def scanning_strategy(self) -> Optional[BaseStrategy]:
@@ -96,8 +95,7 @@ class PisakScannableWidget(QWidget, PisakScannableItem):
         Weryfikujemy, czy obiekt `item` jest PisakScannableItem i, jesli tak, to
         dodajemy go do listy skanowalnych obiektow-dzieci
         """
-        if isinstance(item, PisakScannableItem):
-            if item not in self._current_scannable_items:
+        if isinstance(item, PisakScannableItem) and item not in self._current_scannable_items:
                 self._current_scannable_items.append(item)
 
     def focusInEvent(self, event: QFocusEvent) -> None:
