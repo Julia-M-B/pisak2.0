@@ -17,8 +17,8 @@ KEYBOARD_TYPES_MAP = {
 }
 
 class Keyboard(PisakColumnWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent=None, strategy=None):
+        super().__init__(parent, strategy)
         self._buttons = []
 
     @property
