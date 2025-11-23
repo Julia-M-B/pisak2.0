@@ -64,4 +64,7 @@ class PisakBaseModule(QMainWindow):
         self.setFocusPolicy(QtCore.StrongFocus)
 
     def closeEvent(self, event) -> None:
-        self.parent().closeEvent(event)
+        if self.parent():
+            self.parent().closeEvent(event)
+        else:
+            super().closeEvent(event)
