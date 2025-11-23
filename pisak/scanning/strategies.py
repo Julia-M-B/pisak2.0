@@ -18,3 +18,14 @@ class TopStrategy(BaseStrategy):
     
     def reset_scan(self, item):
         return item
+
+
+class BackNLevelsStrategy(BaseStrategy):
+    def __init__(self, n: int = 2):
+        super().__init__()
+        self._n = n  # dla n = 1 to jest strategia BackToParentStrategy
+
+    def reset_scan(self, item):
+        for _ in range(self._n):
+            item = item.parentWidget()
+        return item
