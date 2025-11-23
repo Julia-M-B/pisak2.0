@@ -81,8 +81,10 @@ class ScanningManager(EventEmitter):
         self._timer.stop()
         
         # Reset iterator counter on old item before clearing it
-        if self._scanning_state.current_item:
-            self._scanning_state.current_item.iter_counter = 0
+        current_item = self._scanning_state.current_item
+        if current_item:
+            current_item.iter_counter = 0
+            current_item.reset_highlight_self()
         
         # Clear current item and set scanning to False
         self._scanning_state.set_is_scanning(False).set_current_item(None)
