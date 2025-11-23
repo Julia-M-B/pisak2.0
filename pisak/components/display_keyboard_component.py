@@ -51,6 +51,9 @@ class KeyboardDisplayComponent(PisakColumnWidget):
         self._button_manager.subscribe(self._keyboards_handler)
 
         self.set_layout()
+        # Right Column: 1 vs 1 (Display vs Keyboard)
+        self.layout.setStretch(0, 1)
+        self.layout.setStretch(1, 1)
 
     @property
     def keyboards(self):

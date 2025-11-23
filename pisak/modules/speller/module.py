@@ -18,16 +18,17 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt
 
 from pisak.components.display_keyboard_component import KeyboardDisplayComponent
+from pisak.components.word_column_component import WordColumnComponent
 from pisak.modules.base_module import PisakBaseModule
 from pisak.adapters import KeyPressAdapter
 from pisak.events import AppEvent, AppEventType
-
+from pisak.widgets.containers import PisakRowWidget
 
 class PisakSpellerModule(PisakBaseModule):
     """
     Podstawa modulu jest PisakSpellerModule, ktory dziedziczy po PisakBaseModule.
     
-    This module provides a virtual keyboard interface for text input.
+    This module provides a virtual keyboard interface for text input with word prediction.
     The keyboard emits events that are handled by the text display widget.
     Real keyboard input is ignored - only virtual keyboard events are processed.
     """
@@ -37,30 +38,40 @@ class PisakSpellerModule(PisakBaseModule):
         :param QWidget parent: obiekt-rodzic modułu Speller
         """
         super().__init__(parent=parent, title="Speller")
+        self.set_central_widget(PisakRowWidget(parent=self))
 
-        # Create keyboard display component which sets up:
-        # - Text display widget (ignores real keyboard input)
-        # - Virtual keyboard with buttons
-        # - Event connections: keyboard -> text display observer
+        # Create Components
+        words = ["TEST1", "TEST2", "TEST3", "TEST4", "TEST5", 
+                 "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
+        words2 = ["TEST1", "TEST2", "TEST3", "TEST4", "TEST5",
+                 "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
+        self._word_column = WordColumnComponent(self.centralWidget(), words=words)
+        self._word_column2 = WordColumnComponent(self.centralWidget(), words=words2)
         self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
+
+
+        self.centralWidget().add_item(self._word_column.column)
+        self.centralWidget().add_item(self._word_column2.column)
+        self.centralWidget().add_item(self._keyboard_component)
+        self.centralWidget().set_layout()
         
-        # Set up keyboard adapter to capture key "1" for scanning control
+        # Apply Stretches
+        self.centralWidget().layout.setStretch(0, 1)
+        self.centralWidget().layout.setStretch(1, 2)
+        self.centralWidget().layout.setStretch(2, 4)
+
+        # Set up scanning to control the Main Row (switching between WordColumn and RightColumn)
         self._key_adapter = KeyPressAdapter(self, parent=self)
-        self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self._keyboard_component.keyboards))
+        self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self.centralWidget()))
 
         self.init_ui()
-
-    def init_ui(self):
-        super().init_ui()
-        self.centralWidget().set_layout()
-
 
 class ScanningKeyHandler:
     """Handler for key "1" to control scanning"""
     
-    def __init__(self, scanning_manager, keyboards_container):
+    def __init__(self, scanning_manager, main_scannable_item):
         self._scanning_manager = scanning_manager
-        self._keyboards_container = keyboards_container
+        self._main_scannable_item = main_scannable_item
     
     def handle_event(self, event: AppEvent) -> None:
         """Handle key press events - only process key "1" """
@@ -82,13 +93,10 @@ class ScanningKeyHandler:
         
         if is_key_1:
             if not self._scanning_manager.is_scanning:
-                # Start scanning from the current keyboard
-                current_keyboard = self._keyboards_container.currentWidget()
-                if current_keyboard:
-                    # Check if it's a scannable item (has scannable_items property)
-                    scannable_items = getattr(current_keyboard, 'scannable_items', [])
-                    if len(scannable_items) > 0:
-                        self._scanning_manager.start_scanning(current_keyboard)
+                # Start scanning from the main row (word column + keyboards)
+                scannable_items = getattr(self._main_scannable_item, 'scannable_items', [])
+                if len(scannable_items) > 0:
+                    self._scanning_manager.start_scanning(self._main_scannable_item)
             else:
                 # Activate the currently focused item
                 self._scanning_manager.activate_current_item()
