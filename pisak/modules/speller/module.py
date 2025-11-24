@@ -23,6 +23,7 @@ from pisak.modules.base_module import PisakBaseModule
 from pisak.adapters import KeyPressAdapter
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakRowWidget
+from pisak.predictions.prediction_handler import PredictionHandler
 
 class PisakSpellerModule(PisakBaseModule):
     """
@@ -43,28 +44,39 @@ class PisakSpellerModule(PisakBaseModule):
         # Create Components
         words = ["TEST1", "TEST2", "TEST3", "TEST4", "TEST5", 
                  "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
-        words2 = ["TEST1", "TEST2", "TEST3", "TEST4", "TEST5",
-                 "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
         self._word_column = WordColumnComponent(self.centralWidget(), words=words)
-        self._word_column2 = WordColumnComponent(self.centralWidget(), words=words2)
         self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
 
 
         self.centralWidget().add_item(self._word_column.column)
-        self.centralWidget().add_item(self._word_column2.column)
         self.centralWidget().add_item(self._keyboard_component)
         self.centralWidget().set_layout()
         
         # Apply Stretches
         self.centralWidget().layout.setStretch(0, 1)
-        self.centralWidget().layout.setStretch(1, 1)
-        self.centralWidget().layout.setStretch(2, 3)
+        self.centralWidget().layout.setStretch(1, 3)
+
+        # Set up word prediction system
+        # Connect text display changes to word column updates via threaded prediction service
+        self._prediction_handler = PredictionHandler(
+            word_column=self._word_column,
+            n_words=len(words)
+        )
+        # Subscribe prediction handler to text display events
+        self._keyboard_component.display.subscribe(self._prediction_handler)
 
         # Set up scanning to control the Main Row (switching between WordColumn and RightColumn)
         self._key_adapter = KeyPressAdapter(self, parent=self)
         self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self.centralWidget()))
 
         self.init_ui()
+    
+    def closeEvent(self, event):
+        """Clean up resources when module is closed"""
+        # Stop the prediction service thread
+        if hasattr(self, '_prediction_handler'):
+            self._prediction_handler.stop()
+        super().closeEvent(event)
 
 class ScanningKeyHandler:
     """Handler for key "1" to control scanning"""

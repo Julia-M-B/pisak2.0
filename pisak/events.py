@@ -19,6 +19,7 @@ class AppEventType(Enum):
     NEW_LINE_ADDED = auto()  # event dodania nowej linii
     CURSOR_MOVED_LEFT = auto()  # event przesuniecia kursora w lewo
     CURSOR_MOVED_RIGHT = auto()  # event przesuniecia kursora w prawo
+    TEXT_CHANGED = auto()  # event zmiany tekstu w wyswietlaczu (text + cursor position)
     # Keyboard switching events
     ITEMS_SWITCHED = auto()  # event zmiany wyswietlanych elementow (np. w stacked widget)
 

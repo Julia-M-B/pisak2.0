@@ -52,6 +52,11 @@ class PisakButton(QPushButton, PisakScannableItem):
     def text(self):
         return self._text
 
+    @text.setter
+    def text(self, text):
+        self._text = text
+        super().setText(text)
+
     @property
     def button_type(self):
         return self._button_type

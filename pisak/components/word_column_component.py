@@ -46,4 +46,23 @@ class WordColumnComponent:
     def buttons(self):
         """Get list of all word buttons"""
         return self._buttons
+    
+    def update_words(self, new_words: list[str]):
+        """
+        Update the words displayed on the buttons.
+        This method is thread-safe and can be called from any thread.
+        
+        :param new_words: List of new words to display
+        """
+        # Ensure we have the right number of words
+        if len(new_words) != len(self._buttons):
+            # Pad with empty strings or truncate as needed
+            if len(new_words) < len(self._buttons):
+                new_words = new_words + [""] * (len(self._buttons) - len(new_words))
+            else:
+                new_words = new_words[:len(self._buttons)]
+        
+        # Update button texts
+        for button, word in zip(self._buttons, new_words):
+            button.text = word
 

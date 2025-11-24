@@ -6,10 +6,11 @@ from PySide6.QtWidgets import QLabel, QSizePolicy
 
 from pisak.adapters import TimerAdapter
 from pisak.events import AppEvent, AppEventType
+from pisak.emitters import EventEmitter
 import html
 
 
-class PisakDisplay(QLabel):
+class PisakDisplay(QLabel, EventEmitter):
     """
     Wyświetlacz do tekstu. Zarządza wyświetlaniem tekstu i modyfikowaniem go.
     Ma swój kursor, który wskazuje, w którym miejscu modyfikujemy tekst.
@@ -17,7 +18,8 @@ class PisakDisplay(QLabel):
     """
 
     def __init__(self, parent):
-        super().__init__(parent=parent)
+        QLabel.__init__(self, parent)
+        EventEmitter.__init__(self)
 
         # cursor settings
         self._cursor_index: int = 0
@@ -115,16 +117,26 @@ class PisakDisplay(QLabel):
         """Toggle cursor visibility for blinking effect"""
         self._cursor_visible = not self._cursor_visible
         self.update_display()
+    
+    def _emit_text_changed(self):
+        """Emit TEXT_CHANGED event with current text and cursor position"""
+        event = AppEvent(
+            AppEventType.TEXT_CHANGED,
+            data={'text': self._text, 'cursor_position': self._cursor_index}
+        )
+        self.emit_event(event)
 
     def move_cursor_left(self):
         if self._cursor_index > 0:
             self._cursor_index -= 1
         self.update_display()
+        self._emit_text_changed()
 
     def move_cursor_right(self):
         if self._cursor_index < len(self._text):
             self._cursor_index += 1
         self.update_display()
+        self._emit_text_changed()
 
     def update_text(self, text):
         """Insert arbitrary text at the cursor position."""
@@ -134,6 +146,7 @@ class PisakDisplay(QLabel):
         self._text = left_text + text + right_text
         self._cursor_index += len(text)
         self.update_display()
+        self._emit_text_changed()
 
     def insert_newline(self):
         """Insert a newline at the cursor position."""
@@ -150,6 +163,7 @@ class PisakDisplay(QLabel):
             self._text = left_text + right_text
             self._cursor_index -= 1
         self.update_display()
+        self._emit_text_changed()
 
     def _wrap_text(self, text, max_width):
         """
