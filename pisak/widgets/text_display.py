@@ -29,7 +29,7 @@ class PisakDisplay(QLabel):
         self._cursor_marker = "\0"
 
         self._text = ""
-        self._displayed_text = ""
+        self._displayed_text = [""]
         self._history = []
 
         self.init_ui()
@@ -37,7 +37,7 @@ class PisakDisplay(QLabel):
         # metrics for displayed text (based on font set in init_ui and current size of display)
         self._font_metrics = self._get_current_font_metrics()
         self._max_lines = self._calculate_max_lines()
-        self._max_line_width = self._calculate_max_line_width()
+        self._max_line_length = self._calculate_max_line_length()
 
         # Initialize with empty text to ensure proper display
         self.update_display()
@@ -73,10 +73,15 @@ class PisakDisplay(QLabel):
 
         return max(2, available_height // line_height - 1)  # odejmujemy jedna linie na "numer strony"
 
-    def _calculate_max_line_width(self) -> int:
-        # Calculate max width
-        # Subtract padding (approx 20px horizontal)
-        line_width = self.width() - 20
+    def _calculate_max_line_length(self) -> int:
+        # Calculate max width accounting for padding, border, and margins
+        # Stylesheet has: padding: 5px (left+right = 10px) + border: 2px (left+right = 4px) = 14px
+        # Add extra margin based on average character width to ensure text doesn't get cut off
+        avg_char_width = self._font_metrics.averageCharWidth()
+        # Total horizontal space to subtract: CSS padding/border + extra safety margin
+        horizontal_padding = 14 + int(avg_char_width * 1.5)  # Extra 1.5 chars worth of space
+        
+        line_width = self.width() - horizontal_padding
         if line_width <= 0:
             line_width = 100  # fallback
         return line_width
@@ -84,7 +89,7 @@ class PisakDisplay(QLabel):
     def update_font_metrics(self):
         self._font_metrics = self._get_current_font_metrics()
         self._max_lines = self._calculate_max_lines()
-        self._max_line_width = self._calculate_max_line_width()
+        self._max_line_length = self._calculate_max_line_length()
 
     def init_ui(self):
         self.setFont(QFont("Arial", 30))
@@ -175,22 +180,31 @@ class PisakDisplay(QLabel):
             current_width = 0
 
             space_width = self._font_metrics.horizontalAdvance(" ")
-            for word in words:
-                # Reconstruct word with trailing space if it wasn't the last word
-                # Note: simple split(' ') loses delimiters. We'll assume single space.
-                # This is a limitation but fits "word is bounded by whitespaces".
+            for word_idx, word in enumerate(words):
+                # Calculate actual display width without the cursor marker
+                word_without_marker = word.replace(self._cursor_marker, "")
+                
+                # Handle empty words (from trailing/multiple spaces)
+                if not word_without_marker:
+                    # If this empty word contains the cursor marker, add it to current line
+                    if self._cursor_marker in word:
+                        current_line.append(self._cursor_marker)
+                    # Skip processing empty words further
+                    continue
+                
+                word_width = self._font_metrics.horizontalAdvance(word_without_marker)
 
-                # Check width of word
-                word_width = self._font_metrics.horizontalAdvance(word)
-
-                if current_width + (space_width if current_line else 0) + word_width <= max_width:
-                    if current_line:
+                # Check if word fits on current line
+                needs_space_before = len(current_line) > 0
+                if current_width + (space_width if needs_space_before else 0) + word_width <= max_width:
+                    # Word fits
+                    if needs_space_before:
                         current_line.append(" ")
                         current_width += space_width
                     current_line.append(word)
                     current_width += word_width
                 else:
-                    # Line break needed
+                    # Word doesn't fit - wrap to new line
                     if current_line:
                         lines.append("".join(current_line))
 
@@ -201,67 +215,100 @@ class PisakDisplay(QLabel):
             if current_line:
                 lines.append("".join(current_line))
 
-        # Clean up cursor marker and find cursor position
-        final_lines = []
-        visual_cursor_line = 0
-
-        # Handle case where text ends with newline which adds an empty line
-        # split('\n') does this correctly for 'abc\n' -> ['abc', '']
-
+        # Find which line contains the cursor
+        cursor_line_idx = 0
         for idx, line in enumerate(lines):
             if self._cursor_marker in line:
-                visual_cursor_line = idx
-                # We don't remove the marker yet, we need it for rendering
-            final_lines.append(line)
+                cursor_line_idx = idx
+                break
 
-        return final_lines, visual_cursor_line
+        return lines, cursor_line_idx
 
     def update_display(self):
         """
         Calculate layout, wrap text, handle pagination, and render HTML.
         """
         # Wrap text and find cursor
-        lines, cursor_line_idx = self._wrap_text(self._text, self._max_line_width)
+        lines, cursor_line_idx = self._wrap_text(self._text, self._max_line_length)
 
         n_lines = len(lines)
-        n_windows = math.ceil(n_lines / self._max_lines)
+        n_max_lines = self._max_lines
+
+        # Calculate number of pages
+        n_windows = math.ceil(n_lines / n_max_lines)
+        if n_windows == 0:
+            n_windows = 1
 
         windows = []
-        space_width = self._font_metrics.horizontalAdvance(" ")
         for i in range(1, n_windows + 1):
-            displayed_lines = lines[(i - 1) * self._max_lines : min(i * self._max_lines, n_lines)]
+            # Slice for current page
+            start_idx = (i - 1) * n_max_lines
+            end_idx = min(start_idx + n_max_lines, n_lines)
+            displayed_lines = list(lines[start_idx:end_idx])
+
+            # Pad with empty lines to push page number to bottom
+            while len(displayed_lines) < n_max_lines:
+                displayed_lines.append("")
+
+            # Add page number
             page_n = f"{i}/{n_windows}"
-            page_n_width = self._font_metrics.horizontalAdvance(page_n)
-            n_spaces = self._max_line_width - page_n_width // (2 * space_width)
-            displayed_lines.append(" " * n_spaces + f"{i}/{n_windows}" + " " * n_spaces)
+            displayed_lines.append(page_n)
+            
             windows.append(displayed_lines)
 
-        cursor_window = math.ceil(cursor_line_idx / n_windows)
+        # Calculate cursor window
+        cursor_window = cursor_line_idx // n_max_lines
+        
+        # Safety bounds
+        if cursor_window >= len(windows):
+            cursor_window = len(windows) - 1
+        if cursor_window < 0:
+            cursor_window = 0
+
         visible_lines = windows[cursor_window]
+        self._displayed_text = visible_lines[:-1]
 
         # Construct HTML
         html_lines = []
 
-        for line in visible_lines[:-1]:
-            # Replace marker with cursor
-            line_content = html.escape(line)
-
+        for line in self._displayed_text:
+            # Replace marker with cursor BEFORE HTML escaping
             cursor_char = "|" if self._cursor_visible else ""
-
-            if "\0" in line:
-                line_content = line_content.replace("\0", cursor_char)
-            elif "\0" in line_content:
-                line_content = line_content.replace("\0", cursor_char)
+            
+            # Replace cursor marker first, before any escaping
+            if self._cursor_marker in line:
+                line = line.replace(self._cursor_marker, cursor_char)
+            
+            # Now escape HTML
+            line_content = html.escape(line)
 
             # Preserve spaces
             line_content = line_content.replace("  ", "&nbsp; ")
+            
+            # Ensure empty lines take up vertical space
+            if not line_content:
+                line_content = "&nbsp;"
+            
             html_lines.append(line_content)
 
         page_n_line = visible_lines[-1]
-        html_lines.append(f"<div style='color: gray'>{page_n_line}</div>")
+        
+        # Calculate font size for page number (50% of current font size)
+        current_font_size = self.font().pointSize()
+        page_n_font_size = max(1, int(current_font_size / 2))
 
-        full_html = "<br>".join(html_lines)
-        self._displayed_text = full_html
+        # Use remaining vertical space to push the page number to the bottom
+        # We calculated n_max_lines with a "-1" buffer (approx 1 line height).
+        # The page number takes about 0.5 line height.
+        # So we have ~0.5 line height of extra space to distribute.
+        
+        line_height = self._font_metrics.lineSpacing()
+        margin_top = int(line_height * 0.2) # A small push down, relying on the empty line buffer
+        
+        page_html = f"<div align='center' style='color: gray; font-size: {page_n_font_size}pt; margin: 0px; margin-top: {margin_top}px;'>{page_n_line}</div>"
+
+        content_html = "<br>".join(html_lines)
+        full_html = content_html + page_html
         self.setText(full_html)
 
 
