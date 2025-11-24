@@ -7,7 +7,8 @@ from pisak.scanning.scannable import PisakScannableItem
 from pisak.scanning.strategies import BackToParentStrategy
 
 class ButtonType(Enum):
-    TEXT = auto()
+    CHARACTER = auto()
+    WORD = auto()
     ENTER = auto()
     SPACE = auto()
     BACKSPACE = auto()

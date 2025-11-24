@@ -29,7 +29,7 @@ class WordColumnComponent:
             button = PisakButton(
                 parent=self._column,
                 text=word,
-                button_type=ButtonType.TEXT,
+                button_type=ButtonType.WORD,
                 scanning_strategy=BackToParentStrategy()
             )
             self._column.add_item(button)

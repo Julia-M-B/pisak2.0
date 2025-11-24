@@ -12,7 +12,8 @@ class AppEventType(Enum):
     ITEM_ACTIVATED = auto()  # event oznaczajacy, ze dany obiekt zostal aktywowany (pojawil sie input z zewnatrz, gdy obiekt mial focus)
     SCANNING_RESET = auto()  # event resetu skanowania
     # Text input events (from virtual keyboard)
-    TEXT_INPUT = auto()  # event wprowadzenia tekstu z wirtualnej klawiatury
+    CHAR_ADDED = auto()  # event wprowadzenia tekstu z wirtualnej klawiatury
+    WORD_ADDED = auto()  # event wprowadzenia tekstu z wirtualnej klawiatury
     SPACE_ADDED = auto()  # event dodania spacji
     BACKSPACE_PRESSED = auto()  # event wcisniecia backspace
     NEW_LINE_ADDED = auto()  # event dodania nowej linii

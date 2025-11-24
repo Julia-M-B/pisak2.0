@@ -65,10 +65,12 @@ class ButtonManager(EventEmitter):
             case ButtonType.SWITCHER:
                 if button.additional_data is not None:
                     self.emit_event(AppEvent(AppEventType.ITEMS_SWITCHED, button.additional_data))
-            case ButtonType.TEXT:
-                self.emit_event(AppEvent(AppEventType.TEXT_INPUT, button.text))
+            case ButtonType.CHARACTER:
+                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text))
+            case ButtonType.WORD:
+                self.emit_event(AppEvent(AppEventType.WORD_ADDED, button.text))
             case _:
-                self.emit_event(AppEvent(AppEventType.TEXT_INPUT, button.text))
+                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text))
 
 
 class ButtonClickHandler:
