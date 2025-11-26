@@ -23,6 +23,11 @@ class AppEventType(Enum):
     CURSOR_MOVED_UP = auto()
     CURSOR_MOVED_DOWN = auto()
     TEXT_CHANGED = auto()  # event zmiany tekstu w wyswietlaczu (text + cursor position)
+    ITEM_POINTED = auto()
+    TEXT_SAVED = auto()
+    TEXT_UPLOADED = auto()
+    READ_TEXT = auto()
+
     # Keyboard switching events
     ITEMS_SWITCHED = auto()  # event zmiany wyswietlanych elementow (np. w stacked widget)
     # Prediction events

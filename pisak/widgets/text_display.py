@@ -1,3 +1,4 @@
+import copy
 import math
 
 from PySide6.QtCore import Qt
@@ -62,6 +63,10 @@ class PisakDisplay(QLabel, EventEmitter):
     def displayed_text(self):
         return self._displayed_text
 
+    @property
+    def history(self):
+        return copy.copy(self._history)
+
     def _get_current_font_metrics(self):
         return QFontMetrics(self.font())
 
@@ -118,7 +123,7 @@ class PisakDisplay(QLabel, EventEmitter):
         self._cursor_visible = not self._cursor_visible
         self.update_display()
     
-    def _emit_text_changed(self):
+    def emit_text_changed(self):
         """Emit TEXT_CHANGED event with current text and cursor position"""
         event = AppEvent(
             AppEventType.TEXT_CHANGED,
@@ -130,13 +135,13 @@ class PisakDisplay(QLabel, EventEmitter):
         if self._cursor_index > 0:
             self._cursor_index -= 1
             self.update_display()
-            self._emit_text_changed()
+            self.emit_text_changed()
 
     def move_cursor_right(self):
         if self._cursor_index < len(self._text):
             self._cursor_index += 1
             self.update_display()
-            self._emit_text_changed()
+            self.emit_text_changed()
 
     def move_cursor_up(self):
         # Wrap text and find cursor
@@ -154,7 +159,7 @@ class PisakDisplay(QLabel, EventEmitter):
             else:
                 self._cursor_index -= (len(previous_line) + 1)
             self.update_display()
-            self._emit_text_changed()
+            self.emit_text_changed()
 
     def move_cursor_down(self):
         # Wrap text and find cursor
@@ -172,7 +177,7 @@ class PisakDisplay(QLabel, EventEmitter):
             else:
                 self._cursor_index += len(cursor_line) + 1
             self.update_display()
-            self._emit_text_changed()
+            self.emit_text_changed()
 
     def update_text(self, text):
         """Insert arbitrary text at the cursor position."""
@@ -182,7 +187,7 @@ class PisakDisplay(QLabel, EventEmitter):
         self._text = left_text + text + right_text
         self._cursor_index += len(text)
         self.update_display()
-        self._emit_text_changed()
+        self.emit_text_changed()
 
     def insert_newline(self):
         """Insert a newline at the cursor position."""
@@ -199,7 +204,7 @@ class PisakDisplay(QLabel, EventEmitter):
             self._text = left_text + right_text
             self._cursor_index -= 1
         self.update_display()
-        self._emit_text_changed()
+        self.emit_text_changed()
 
     def clear_text(self):
         """Clear the text display and save current text to history"""
@@ -211,7 +216,7 @@ class PisakDisplay(QLabel, EventEmitter):
         self._text = ""
         self._cursor_index = 0
         self.update_display()
-        self._emit_text_changed()
+        self.emit_text_changed()
 
     def _is_word_char(self, char: str) -> bool:
         """Check if a character is part of a word (letter or digit)"""
@@ -297,7 +302,7 @@ class PisakDisplay(QLabel, EventEmitter):
         self._cursor_index = start + len(new_word)
         
         self.update_display()
-        self._emit_text_changed()
+        self.emit_text_changed()
 
     def _wrap_text(self, text, max_width):
         """

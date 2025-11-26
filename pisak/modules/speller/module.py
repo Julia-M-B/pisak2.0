@@ -18,7 +18,9 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt
 
 from pisak.components.display_keyboard_component import KeyboardDisplayComponent
-from pisak.components.word_column_component import WordColumnComponent
+from pisak.components.column_components import WordColumnComponent
+from pisak.components.action_buttons_column_component import ActionButtonsColumnComponent, ActionButtonsHandler
+from pisak.components.keyboard import ButtonManager, ButtonClickHandler
 from pisak.modules.base_module import PisakBaseModule
 from pisak.adapters import KeyPressAdapter
 from pisak.events import AppEvent, AppEventType
@@ -46,15 +48,30 @@ class PisakSpellerModule(PisakBaseModule):
                  "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
         self._word_column = WordColumnComponent(self.centralWidget(), words=words)
         self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
+        
+        # Create Action Buttons Column - must be created after keyboard_component and word_column
+        self._action_column = ActionButtonsColumnComponent(parent=self.centralWidget())
+        self._action_button_manager = ButtonManager()
+        self._buttons_clicked_handler = ButtonClickHandler(button_manager=self._action_button_manager)
+        self._action_button_handler = ActionButtonsHandler(scanning_manager=self._scanning_manager, text_display=self._keyboard_component.display)
+        self._action_button_handler.add_item_reference(self._keyboard_component, "KEYBOARDS")
+        self._action_button_handler.add_item_reference(self._word_column, "PREDICTIONS")
 
+        self._scanning_manager.subscribe(self._buttons_clicked_handler)
 
-        self.centralWidget().add_item(self._word_column.column)
+        self._action_button_manager.subscribe(self._action_button_handler)
+
+        # Add components to layout: Action Column (left) | Word Column | Keyboard Component (right)
+        self.centralWidget().add_item(self._action_column)
+        self.centralWidget().add_item(self._word_column)
         self.centralWidget().add_item(self._keyboard_component)
         self.centralWidget().set_layout()
         
-        # Apply Stretches
-        self.centralWidget().layout.setStretch(0, 1)
-        self.centralWidget().layout.setStretch(1, 3)
+        # Apply Stretches: Action Column (1/5) | Word Column (1/5) | Keyboard (3/5)
+        # To achieve 1/5 width for action column: use ratio 1:1:3 for a total of 5 parts
+        self.centralWidget().layout.setStretch(0, 1)  # Action column: 1/5
+        self.centralWidget().layout.setStretch(1, 1)  # Word column: 1/5
+        self.centralWidget().layout.setStretch(2, 3)  # Keyboard: 3/5
 
         # Set up word prediction system
         # Connect text display changes to word column updates via threaded prediction service

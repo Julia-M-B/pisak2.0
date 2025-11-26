@@ -6,7 +6,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from pisak.events import AppEvent, AppEventType
 from pisak.predictions.prediction_service import PredictionService
-from pisak.components.word_column_component import WordColumnComponent
+from pisak.components.column_components import WordColumnComponent
 from pisak.emitters import EventEmitter
 
 

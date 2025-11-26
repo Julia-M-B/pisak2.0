@@ -3,7 +3,7 @@ from pisak.widgets.buttons import PisakButton, ButtonType
 from pisak.scanning.strategies import BackToParentStrategy
 
 
-class WordColumnComponent:
+class WordColumnComponent(PisakColumnWidget):
     """
     Component that creates a column of word buttons.
     Each button contains a predefined word that can be inserted into the display.
@@ -16,9 +16,9 @@ class WordColumnComponent:
         :param parent: Parent widget
         :param words: List of words to display as buttons
         """
-        self._parent = parent
+        super().__init__(parent)
         self._words = words or []
-        self._column = PisakColumnWidget(parent=self._parent)
+        # self._column = PisakColumnWidget(parent=self._parent)
         self._buttons = []
         
         self._create_word_buttons()
@@ -27,20 +27,20 @@ class WordColumnComponent:
         """Create a button for each word in the list"""
         for word in self._words:
             button = PisakButton(
-                parent=self._column,
+                parent=self,
                 text=word,
                 button_type=ButtonType.WORD,
                 scanning_strategy=BackToParentStrategy()
             )
-            self._column.add_item(button)
+            self.add_item(button)
             self._buttons.append(button)
         
-        self._column.set_layout()
+        self.set_layout()
     
-    @property
-    def column(self):
-        """Get the column widget containing all word buttons"""
-        return self._column
+    # @property
+    # def column(self):
+    #     """Get the column widget containing all word buttons"""
+    #     return self._column
     
     @property
     def buttons(self):

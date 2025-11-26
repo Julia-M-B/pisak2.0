@@ -23,7 +23,7 @@ class KeyboardDisplayComponent(PisakColumnWidget):
 
         # Create keyboards from config files
         config_dir = os.path.join(os.path.dirname(__file__), "..", "config_files")
-        lowercase_config = os.path.join(config_dir, "lowercase_keyboard.yml")
+        lowercase_config = os.path.join(config_dir, "numerical_keyboard.yml")
         uppercase_config = os.path.join(config_dir, "uppercase_keyboard.yml")
 
         self._lower_letters = Keyboard(parent=self._keyboards, strategy=BackNLevelsStrategy(n=3))
