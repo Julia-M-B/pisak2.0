@@ -129,14 +129,14 @@ class PisakDisplay(QLabel, EventEmitter):
     def move_cursor_left(self):
         if self._cursor_index > 0:
             self._cursor_index -= 1
-        self.update_display()
-        self._emit_text_changed()
+            self.update_display()
+            self._emit_text_changed()
 
     def move_cursor_right(self):
         if self._cursor_index < len(self._text):
             self._cursor_index += 1
-        self.update_display()
-        self._emit_text_changed()
+            self.update_display()
+            self._emit_text_changed()
 
     def move_cursor_up(self):
         # Wrap text and find cursor
@@ -150,9 +150,11 @@ class PisakDisplay(QLabel, EventEmitter):
                     break
                 line_length += 1
             if len(previous_line) <= line_length:
-                self._cursor_index -= (line_length + 1)  # plus 1 for `\n` at the end of the previous line
+                self._cursor_index -= (line_length + 1)
             else:
                 self._cursor_index -= len(previous_line)
+            self.update_display()
+            self._emit_text_changed()
 
     def move_cursor_down(self):
         # Wrap text and find cursor
@@ -169,6 +171,8 @@ class PisakDisplay(QLabel, EventEmitter):
                 self._cursor_index += (len(cursor_line) - line_length + len(next_line))  # if next line is shorter, move at the end of the next line
             else:
                 self._cursor_index += len(cursor_line)
+            self.update_display()
+            self._emit_text_changed()
 
     def update_text(self, text):
         """Insert arbitrary text at the cursor position."""
