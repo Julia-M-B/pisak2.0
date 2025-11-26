@@ -202,6 +202,10 @@ class PisakDisplay(QLabel, EventEmitter):
                 if not word_without_marker:
                     # If this empty word contains the cursor marker, add it to current line
                     if self._cursor_marker in word:
+                        # Add space before cursor if there's already content on the line
+                        if len(current_line) > 0:
+                            current_line.append(" ")
+                            current_width += space_width
                         current_line.append(self._cursor_marker)
                     # Skip processing empty words further
                     continue
@@ -351,8 +355,8 @@ class TextEditionHandler:
         elif event.type == AppEventType.CURSOR_MOVED_LEFT:
             self._text_display.move_cursor_left()
         elif event.type == AppEventType.WORD_ADDED:
-            self._text_display.update_text(event.data)
-            self._text_display.add_space()
+            # Add a space after the word for better UX
+            self._text_display.update_text(event.data + " ")
 
 
 class CursorToggleHandler:
