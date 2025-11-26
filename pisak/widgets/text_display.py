@@ -165,6 +165,104 @@ class PisakDisplay(QLabel, EventEmitter):
         self.update_display()
         self._emit_text_changed()
 
+    def clear_text(self):
+        """Clear the text display and save current text to history"""
+        # Save current text to history if it's not empty
+        if self._text:
+            self._history.append(self._text)
+        
+        # Clear text and reset cursor
+        self._text = ""
+        self._cursor_index = 0
+        self.update_display()
+        self._emit_text_changed()
+
+    def _is_word_char(self, char: str) -> bool:
+        """Check if a character is part of a word (letter or digit)"""
+        return char.isalnum()
+    
+    def _is_cursor_inside_word(self) -> bool:
+        """
+        Check if cursor is inside a word.
+        Cursor is inside a word if at least one adjacent character (left or right) is a letter or digit.
+        """
+        if not self._text:
+            return False
+        
+        # Check character to the left of cursor
+        if self._cursor_index > 0:
+            left_char = self._text[self._cursor_index - 1]
+            if self._is_word_char(left_char):
+                return True
+        
+        # Check character to the right of cursor
+        if self._cursor_index < len(self._text):
+            right_char = self._text[self._cursor_index]
+            if self._is_word_char(right_char):
+                return True
+        
+        return False
+    
+    def _get_word_boundaries(self) -> tuple[int, int]:
+        """
+        Get the start and end indices of the word that contains the cursor.
+        Returns (start_index, end_index) where:
+        - start_index is the position after the last space (or 0 if no space before)
+        - end_index is the position of the next space/newline (or end of text)
+        
+        If cursor is not inside a word, returns (cursor_index, cursor_index).
+        """
+        if not self._is_cursor_inside_word():
+            return (self._cursor_index, self._cursor_index)
+        
+        text = self._text
+        
+        # Find start of word (search backwards for space or newline)
+        start = self._cursor_index
+        while start > 0:
+            char = text[start - 1]
+            if char in (' ', '\n'):
+                break
+            start -= 1
+        
+        # Find end of word (search forwards for space or newline)
+        end = self._cursor_index
+        while end < len(text):
+            char = text[end]
+            if char in (' ', '\n'):
+                break
+            end += 1
+        
+        return (start, end)
+    
+    def replace_current_word(self, new_word: str):
+        """
+        Replace the word at cursor position with a new word.
+        If cursor is inside a word, replaces that entire word.
+        If the word being replaced has a trailing space, removes it to avoid double spaces.
+        
+        :param new_word: The new word to insert (should already include trailing space if needed)
+        """
+        start, end = self._get_word_boundaries()
+        
+        # Check if there's a space after the word being replaced
+        has_trailing_space = end < len(self._text) and self._text[end] == ' '
+        
+        # If there's a trailing space, include it in the replacement to avoid double spaces
+        if has_trailing_space:
+            end += 1
+        
+        # Replace the word
+        left_text = self._text[:start]
+        right_text = self._text[end:]
+        self._text = left_text + new_word + right_text
+        
+        # Position cursor after the new word
+        self._cursor_index = start + len(new_word)
+        
+        self.update_display()
+        self._emit_text_changed()
+
     def _wrap_text(self, text, max_width):
         """
         Wrap text manually based on max_width and word boundaries.
@@ -346,6 +444,8 @@ class TextEditionHandler:
             self._text_display.update_text(event.data)
         elif event.type == AppEventType.BACKSPACE_PRESSED:
             self._text_display.remove_character()
+        elif event.type == AppEventType.CLEAR_PRESSED:
+            self._text_display.clear_text()
         elif event.type == AppEventType.SPACE_ADDED:
             self._text_display.add_space()
         elif event.type == AppEventType.NEW_LINE_ADDED:
@@ -355,8 +455,17 @@ class TextEditionHandler:
         elif event.type == AppEventType.CURSOR_MOVED_LEFT:
             self._text_display.move_cursor_left()
         elif event.type == AppEventType.WORD_ADDED:
+            # Remove any leading spaces from the word before adding it
+            word = event.data.lstrip() if isinstance(event.data, str) else event.data
             # Add a space after the word for better UX
-            self._text_display.update_text(event.data + " ")
+            word_with_space = word + " "
+            
+            # Check if cursor is inside a word - if yes, replace the whole word
+            if self._text_display._is_cursor_inside_word():
+                self._text_display.replace_current_word(word_with_space)
+            else:
+                # Just insert the word at cursor position
+                self._text_display.update_text(word_with_space)
 
 
 class CursorToggleHandler:
