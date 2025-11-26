@@ -152,7 +152,7 @@ class PisakDisplay(QLabel, EventEmitter):
             if len(previous_line) <= line_length:
                 self._cursor_index -= (line_length + 1)
             else:
-                self._cursor_index -= len(previous_line)
+                self._cursor_index -= (len(previous_line) + 1)
             self.update_display()
             self._emit_text_changed()
 
@@ -168,9 +168,9 @@ class PisakDisplay(QLabel, EventEmitter):
                     break
                 line_length += 1
             if len(next_line) <= line_length:
-                self._cursor_index += (len(cursor_line) - line_length + len(next_line))  # if next line is shorter, move at the end of the next line
+                self._cursor_index += (len(cursor_line) + 1 - line_length + len(next_line))  # if next line is shorter, move at the end of the next line
             else:
-                self._cursor_index += len(cursor_line)
+                self._cursor_index += len(cursor_line) + 1
             self.update_display()
             self._emit_text_changed()
 
