@@ -17,6 +17,7 @@ class ButtonType(Enum):
     UP_ARROW = auto()
     DOWN_ARROW = auto()
     SWITCHER = auto()
+    CLEAR = auto()
 
 class PisakButton(QPushButton, PisakScannableItem):
     def __init__(self, parent, text="", icon=None, scanning_strategy=BackToParentStrategy(), button_type = None, button_ui = None, additional_data: Any = None):

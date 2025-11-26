@@ -56,6 +56,8 @@ class ButtonManager(EventEmitter):
                 self.emit_event(AppEvent(AppEventType.SPACE_ADDED))
             case ButtonType.BACKSPACE:
                 self.emit_event(AppEvent(AppEventType.BACKSPACE_PRESSED))
+            case ButtonType.CLEAR:
+                self.emit_event(AppEvent(AppEventType.CLEAR_PRESSED))
             case ButtonType.ENTER:
                 self.emit_event(AppEvent(AppEventType.NEW_LINE_ADDED))
             case ButtonType.LEFT_ARROW:
