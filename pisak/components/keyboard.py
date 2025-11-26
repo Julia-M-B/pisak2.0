@@ -64,6 +64,10 @@ class ButtonManager(EventEmitter):
                 self.emit_event(AppEvent(AppEventType.CURSOR_MOVED_LEFT))
             case ButtonType.RIGHT_ARROW:
                 self.emit_event(AppEvent(AppEventType.CURSOR_MOVED_RIGHT))
+            case ButtonType.UP_ARROW:
+                self.emit_event(AppEvent(AppEventType.CURSOR_MOVED_UP))
+            case ButtonType.DOWN_ARROW:
+                self.emit_event(AppEvent(AppEventType.CURSOR_MOVED_DOWN))
             case ButtonType.SWITCHER:
                 if button.additional_data is not None:
                     self.emit_event(AppEvent(AppEventType.ITEMS_SWITCHED, button.additional_data))

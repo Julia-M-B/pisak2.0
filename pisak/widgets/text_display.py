@@ -138,6 +138,38 @@ class PisakDisplay(QLabel, EventEmitter):
         self.update_display()
         self._emit_text_changed()
 
+    def move_cursor_up(self):
+        # Wrap text and find cursor
+        lines, cursor_line_idx = self._wrap_text(self._text, self._max_line_length)
+        if cursor_line_idx > 0 and len(lines) > 1:
+            previous_line = lines[cursor_line_idx - 1]
+            cursor_line = lines[cursor_line_idx]
+            line_length = 0
+            for c in cursor_line:
+                if c == self._cursor_marker:
+                    break
+                line_length += 1
+            if len(previous_line) <= line_length:
+                self._cursor_index -= (line_length + 1)  # plus 1 for `\n` at the end of the previous line
+            else:
+                self._cursor_index -= len(previous_line)
+
+    def move_cursor_down(self):
+        # Wrap text and find cursor
+        lines, cursor_line_idx = self._wrap_text(self._text, self._max_line_length)
+        if cursor_line_idx < (len(lines) - 1) and len(lines) > 1:
+            next_line = lines[cursor_line_idx + 1]
+            cursor_line = lines[cursor_line_idx]
+            line_length = 0
+            for c in cursor_line:
+                if c == self._cursor_marker:
+                    break
+                line_length += 1
+            if len(next_line) <= line_length:
+                self._cursor_index += (len(cursor_line) - line_length + len(next_line))  # if next line is shorter, move at the end of the next line
+            else:
+                self._cursor_index += len(cursor_line)
+
     def update_text(self, text):
         """Insert arbitrary text at the cursor position."""
         current_text = self._text
@@ -454,6 +486,10 @@ class TextEditionHandler:
             self._text_display.move_cursor_right()
         elif event.type == AppEventType.CURSOR_MOVED_LEFT:
             self._text_display.move_cursor_left()
+        elif event.type == AppEventType.CURSOR_MOVED_UP:
+            self._text_display.move_cursor_up()
+        elif event.type == AppEventType.CURSOR_MOVED_DOWN:
+            self._text_display.move_cursor_down()
         elif event.type == AppEventType.WORD_ADDED:
             # Remove any leading spaces from the word before adding it
             word = event.data.lstrip() if isinstance(event.data, str) else event.data
