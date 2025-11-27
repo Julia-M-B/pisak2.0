@@ -263,11 +263,9 @@ class ActionButtonsHandler:
         if self._scanning_manager.is_scanning:
             self._scanning_manager.stop_scanning()
 
-        self.yapper.yap(self._text_display.text)
-        
-        # Ensure timer is stopped and state is reset
-        # The scanning manager's stop_scanning() should handle this, but we double-check
-        # to ensure we're in the initial state (no elements highlighted)
+        if self._text_display.text:
+            self.yapper.yap(self._text_display.text)
+
 
     def _on_exit_clicked(self):
         self._module.close()
