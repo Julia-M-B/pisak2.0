@@ -3,10 +3,8 @@ Action buttons column component for the PisakSpeller module.
 Provides buttons for various text manipulation and control actions.
 """
 
-import os
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import Qt
 
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakColumnWidget
@@ -88,16 +86,23 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         )
         self.add_item(self._read_button)
 
+        # Exit button
+        self._exit_button = PisakButton(
+            parent=self,
+            text="WYJŚCIE",
+            button_type=ButtonType.EXIT
+        )
+        self.add_item(self._exit_button)
+
 
 class ActionButtonsHandler:
-    def __init__(self, scanning_manager, text_display):
+    def __init__(self, module, scanning_manager, text_display):
         self.lessac = PiperSpeaker(
             voice=PiperVoicePoland.GOSIA
         )
-        self.lessac.say("hello")
-
         self.yapper = Yapper(speaker=self.lessac)
 
+        self._module = module
         self._scanning_manager = scanning_manager
         self._text_display = text_display
         # Get or create default save directory on desktop
@@ -130,6 +135,8 @@ class ActionButtonsHandler:
 
         elif event.type == AppEventType.READ_TEXT:
             self._on_read_clicked()
+        elif event.type == AppEventType.MODULE_EXITED:
+            self._on_exit_clicked()
 
     @staticmethod
     def _get_save_directory() -> Path:
@@ -261,6 +268,9 @@ class ActionButtonsHandler:
         # Ensure timer is stopped and state is reset
         # The scanning manager's stop_scanning() should handle this, but we double-check
         # to ensure we're in the initial state (no elements highlighted)
+
+    def _on_exit_clicked(self):
+        self._module.close()
 
     def add_item_reference(self, item, key):
         if key not in self._items_dict.keys():

@@ -75,11 +75,13 @@ class ButtonManager(EventEmitter):
                 if button.additional_data is not None:
                     self.emit_event(AppEvent(AppEventType.ITEM_POINTED, button.additional_data))
             case ButtonType.SAVE:
-                self.emit_event(AppEvent(AppEventType.TEXT_SAVED, button.additional_data))
+                self.emit_event(AppEvent(AppEventType.TEXT_SAVED))
             case ButtonType.UPLOAD:
-                self.emit_event(AppEvent(AppEventType.TEXT_UPLOADED, button.additional_data))
+                self.emit_event(AppEvent(AppEventType.TEXT_UPLOADED))
             case ButtonType.READ:
-                self.emit_event(AppEvent(AppEventType.READ_TEXT, button.additional_data))
+                self.emit_event(AppEvent(AppEventType.READ_TEXT))
+            case ButtonType.EXIT:
+                self.emit_event(AppEvent(AppEventType.MODULE_EXITED))
             case ButtonType.CHARACTER:
                 self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text))
             case ButtonType.WORD:

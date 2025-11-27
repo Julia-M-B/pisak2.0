@@ -28,6 +28,8 @@ class AppEventType(Enum):
     TEXT_UPLOADED = auto()
     READ_TEXT = auto()
 
+    MODULE_EXITED = auto()
+
     # Keyboard switching events
     ITEMS_SWITCHED = auto()  # event zmiany wyswietlanych elementow (np. w stacked widget)
     # Prediction events
