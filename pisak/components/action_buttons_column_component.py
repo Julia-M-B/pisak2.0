@@ -13,6 +13,7 @@ from pisak.widgets.containers import PisakColumnWidget
 from pisak.widgets.buttons import PisakButton, ButtonType
 from pisak.widgets.text_display import PisakDisplay
 from pisak.scanning.strategies import BackToParentStrategy
+from yapper import Yapper, PiperSpeaker, PiperVoicePoland
 
 
 class ActionButtonsColumnComponent(PisakColumnWidget):
@@ -90,6 +91,13 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
 
 class ActionButtonsHandler:
     def __init__(self, scanning_manager, text_display):
+        self.lessac = PiperSpeaker(
+            voice=PiperVoicePoland.GOSIA
+        )
+        self.lessac.say("hello")
+
+        self.yapper = Yapper(speaker=self.lessac)
+
         self._scanning_manager = scanning_manager
         self._text_display = text_display
         # Get or create default save directory on desktop
@@ -247,6 +255,8 @@ class ActionButtonsHandler:
         # (not just from scanning activation)
         if self._scanning_manager.is_scanning:
             self._scanning_manager.stop_scanning()
+
+        self.yapper.yap(self._text_display.text)
         
         # Ensure timer is stopped and state is reset
         # The scanning manager's stop_scanning() should handle this, but we double-check
