@@ -3,6 +3,9 @@ rows:
     - button:
         text: "PRED"
         button_type: "CHARACTER"
+        strategy:
+          name: "ChangeItemStrategy"
+          data: "PREDICTIONS"
     - button:
         text: "⌫"
         button_type: "BACKSPACE"
@@ -19,6 +22,9 @@ rows:
     - button:
         text: "FUNC"
         button_type: "CHARACTER"
+        strategy:
+          name: "ChangeItemStrategy"
+          data: "FUNCTIONS"
   - row:
     - button:
         text: "A"
