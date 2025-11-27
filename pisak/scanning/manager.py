@@ -126,9 +126,15 @@ class ScanningManager(EventEmitter):
         """
         # Check if activated item is a button - if so, trigger button action via event system
         # This ensures button clicks work both from mouse and scanning activation
-        from pisak.widgets.buttons import PisakButton
+        from pisak.widgets.buttons import PisakButton, ButtonType
+        is_read_button = False
         if isinstance(activated_item, PisakButton):
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
+            
+            # Check if this is a READ button - if so, we should stop scanning completely
+            # and not restart it (user wants to reset to initial state)
+            if activated_item.button_type == ButtonType.READ:
+                is_read_button = True
             
             # Check if scanning state was modified by handlers (e.g. keyboard switch)
             # If handlers started a new scan (current_item changed and is valid),
@@ -139,6 +145,12 @@ class ScanningManager(EventEmitter):
 
         # Stop current scanning
         self.stop_scanning()
+
+        # If this is a READ button, stop scanning completely and reset to initial state
+        # Don't restart scanning - user must press Enter to start scanning again
+        if is_read_button:
+            self.emit_event(AppEvent(AppEventType.SCANNING_RESET, None))
+            return
 
         # If the activated item has scannable items (e.g., a row with buttons),
         # start scanning those items

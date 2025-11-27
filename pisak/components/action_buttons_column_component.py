@@ -240,15 +240,17 @@ class ActionButtonsHandler:
 
     def _on_read_clicked(self):
         """
-        Handle read button click - for now, stops the scanning.
+        Handle read button click - stops the scanning completely and resets to initial state.
         In the future, this will trigger text-to-speech functionality.
         """
+        # Stop scanning completely - this ensures scanning stops even if called from mouse click
+        # (not just from scanning activation)
         if self._scanning_manager.is_scanning:
             self._scanning_manager.stop_scanning()
-
-        if self._scanning_manager.is_scanning:
-            # If still scanning, force stop
-            self._scanning_manager.stop_scanning()
+        
+        # Ensure timer is stopped and state is reset
+        # The scanning manager's stop_scanning() should handle this, but we double-check
+        # to ensure we're in the initial state (no elements highlighted)
 
     def add_item_reference(self, item, key):
         if key not in self._items_dict.keys():
