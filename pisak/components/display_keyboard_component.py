@@ -23,20 +23,28 @@ class KeyboardDisplayComponent(PisakColumnWidget):
 
         # Create keyboards from config files
         config_dir = os.path.join(os.path.dirname(__file__), "..", "config_files")
-        lowercase_config = os.path.join(config_dir, "numerical_keyboard.yml")
         uppercase_config = os.path.join(config_dir, "uppercase_keyboard.yml")
+        diacritics_config = os.path.join(config_dir, "diacritics_keyboard.yml")
+        numerical_config = os.path.join(config_dir, "numerical_keyboard.yml")
 
-        self._lower_letters = Keyboard(parent=self._keyboards, strategy=BackNLevelsStrategy(n=3))
-        self._lower_letters.implement_layout_from_config(lowercase_config)
-        self._keyboards.add_item_reference(self._lower_letters, KeyboardType.LOWERCASE)
-        self._keyboards.add_item(self._lower_letters)
+        self._uppercase = Keyboard(parent=self._keyboards,
+                                   strategy=BackNLevelsStrategy(n=3))
+        self._uppercase.implement_layout_from_config(uppercase_config)
+        self._keyboards.add_item_reference(self._uppercase,
+                                           KeyboardType.UPPERCASE)
+        self._keyboards.add_item(self._uppercase)
 
-        self._upper_letters = Keyboard(parent=self._keyboards, strategy=BackNLevelsStrategy(n=3))
-        self._upper_letters.implement_layout_from_config(uppercase_config)
-        self._keyboards.add_item_reference(self._upper_letters, KeyboardType.UPPERCASE)
-        self._keyboards.add_item(self._upper_letters)
+        self._diacritics = Keyboard(parent=self._keyboards, strategy=BackNLevelsStrategy(n=3))
+        self._diacritics.implement_layout_from_config(diacritics_config)
+        self._keyboards.add_item_reference(self._diacritics, KeyboardType.DIACRITICS)
+        self._keyboards.add_item(self._diacritics)
 
-        self._keyboards.switch_shown_item(self._upper_letters)
+        self._numerical = Keyboard(parent=self._keyboards, strategy=BackNLevelsStrategy(n=3))
+        self._numerical.implement_layout_from_config(numerical_config)
+        self._keyboards.add_item_reference(self._numerical, KeyboardType.NUMERICAL)
+        self._keyboards.add_item(self._numerical)
+
+        self._keyboards.switch_shown_item(self._uppercase)
 
         # setting up all connections between event emitter and event handlers
         self._button_manager = ButtonManager()

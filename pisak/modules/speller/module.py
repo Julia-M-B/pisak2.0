@@ -54,8 +54,10 @@ class PisakSpellerModule(PisakBaseModule):
         self._action_button_manager = ButtonManager()
         self._buttons_clicked_handler = ButtonClickHandler(button_manager=self._action_button_manager)
         self._action_button_handler = ActionButtonsHandler(module=self, scanning_manager=self._scanning_manager, text_display=self._keyboard_component.display)
+
         self._action_button_handler.add_item_reference(self._keyboard_component, "KEYBOARDS")
         self._action_button_handler.add_item_reference(self._word_column, "PREDICTIONS")
+        self._action_button_handler.add_item_reference(self._action_column, "ACTIONS")
 
         self._scanning_manager.subscribe(self._buttons_clicked_handler)
 

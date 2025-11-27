@@ -7,12 +7,12 @@ from pisak.widgets.buttons import PisakButtonBuilder, PisakButton, ButtonType
 
 class KeyboardType(Enum):
     UPPERCASE = auto()
-    LOWERCASE = auto()
+    DIACRITICS = auto()
     NUMERICAL = auto()
 
 KEYBOARD_TYPES_MAP = {
     "uppercase": KeyboardType.UPPERCASE,
-    "lowercase": KeyboardType.LOWERCASE,
+    "diacritics": KeyboardType.DIACRITICS,
     "numerical": KeyboardType.NUMERICAL
 }
 

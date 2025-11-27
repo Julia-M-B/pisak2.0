@@ -2,10 +2,8 @@ rows:
   - row:
     - button:
         text: "PRED"
-        button_type: "CHARACTER"
-        strategy:
-          name: "ChangeItemStrategy"
-          data: "PREDICTIONS"
+        button_type: "POINTER"
+        additional_data: "PREDICTIONS"
     - button:
         text: "⌫"
         button_type: "BACKSPACE"
@@ -18,19 +16,18 @@ rows:
     - button:
         text: "?123"
         button_type: "SWITCHER"
-        additional_data: "LOWERCASE"
+        additional_data: "NUMERICAL"
+    - button:
+        text: "A → Ą"
+        button_type: "SWITCHER"
+        additional_data: "DIACRITICS"
     - button:
         text: "FUNC"
-        button_type: "CHARACTER"
-        strategy:
-          name: "ChangeItemStrategy"
-          data: "FUNCTIONS"
+        button_type: "POINTER"
+        additional_data: "ACTIONS"
   - row:
     - button:
         text: "A"
-        button_type: "CHARACTER"
-    - button:
-        text: "Ą"
         button_type: "CHARACTER"
     - button:
         text: "B"
@@ -39,24 +36,18 @@ rows:
         text: "C"
         button_type: "CHARACTER"
     - button:
-        text: "Ć"
-        button_type: "CHARACTER"
-    - button:
         text: "D"
         button_type: "CHARACTER"
     - button:
         text: "E"
         button_type: "CHARACTER"
     - button:
-        text: "Ę"
-        button_type: "CHARACTER"
-  - row:
-    - button:
         text: "F"
         button_type: "CHARACTER"
     - button:
         text: "G"
         button_type: "CHARACTER"
+  - row:
     - button:
         text: "H"
         button_type: "CHARACTER"
@@ -73,23 +64,14 @@ rows:
         text: "L"
         button_type: "CHARACTER"
     - button:
-        text: "Ł"
-        button_type: "CHARACTER"
-  - row:
-    - button:
         text: "M"
         button_type: "CHARACTER"
     - button:
         text: "N"
         button_type: "CHARACTER"
-    - button:
-        text: "Ń"
-        button_type: "CHARACTER"
+  - row:
     - button:
         text: "O"
-        button_type: "CHARACTER"
-    - button:
-        text: "Ó"
         button_type: "CHARACTER"
     - button:
         text: "P"
@@ -100,10 +82,6 @@ rows:
     - button:
         text: "S"
         button_type: "CHARACTER"
-  - row:
-    - button:
-        text: "Ś"
-        button_type: "CHARACTER"
     - button:
         text: "T"
         button_type: "CHARACTER"
@@ -113,6 +91,7 @@ rows:
     - button:
         text: "V"
         button_type: "CHARACTER"
+  - row:
     - button:
         text: "W"
         button_type: "CHARACTER"
@@ -124,13 +103,6 @@ rows:
         button_type: "CHARACTER"
     - button:
         text: "Z"
-        button_type: "CHARACTER"
-  - row:
-    - button:
-        text: "Ź"
-        button_type: "CHARACTER"
-    - button:
-        text: "Ż"
         button_type: "CHARACTER"
     - button:
         text: "🡑"

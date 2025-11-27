@@ -1,104 +1,96 @@
 rows:
   - row:
     - button:
-        text: "q"
-        button_type: "CHARACTER"
-    - button:
-        text: "w"
-        button_type: "CHARACTER"
-    - button:
-        text: "e"
-        button_type: "CHARACTER"
-    - button:
-        text: "r"
-        button_type: "CHARACTER"
-    - button:
-        text: "t"
-        button_type: "CHARACTER"
-    - button:
-        text: "y"
-        button_type: "CHARACTER"
-    - button:
-        text: "u"
-        button_type: "CHARACTER"
-  - row:
-    - button:
-        text: "i"
-        button_type: "CHARACTER"
-    - button:
-        text: "o"
-        button_type: "CHARACTER"
-    - button:
-        text: "p"
-        button_type: "CHARACTER"
-    - button:
-        text: "a"
-        button_type: "CHARACTER"
-    - button:
-        text: "s"
-        button_type: "CHARACTER"
-    - button:
-        text: "d"
-        button_type: "CHARACTER"
-    - button:
-        text: "f"
-        button_type: "CHARACTER"
-  - row:
-    - button:
-        text: "g"
-        button_type: "CHARACTER"
-    - button:
-        text: "h"
-        button_type: "CHARACTER"
-    - button:
-        text: "j"
-        button_type: "CHARACTER"
-    - button:
-        text: "k"
-        button_type: "CHARACTER"
-    - button:
-        text: "l"
-        button_type: "CHARACTER"
-    - button:
-        text: "z"
-        button_type: "CHARACTER"
-    - button:
-        text: "x"
-        button_type: "CHARACTER"
-  - row:
-    - button:
-        text: "c"
-        button_type: "CHARACTER"
-    - button:
-        text: "v"
-        button_type: "CHARACTER"
-    - button:
-        text: "b"
-        button_type: "CHARACTER"
-    - button:
-        text: "n"
-        button_type: "CHARACTER"
-    - button:
-        text: "m"
-        button_type: "CHARACTER"
-    - button:
-        text: " "
-        button_type: "SPACE"
+        text: "PRED"
+        button_type: "POINTER"
+        additional_data: "PREDICTIONS"
     - button:
         text: "⌫"
         button_type: "BACKSPACE"
-  - row:
+    - button:
+        text: "␣"
+        button_type: "SPACE"
     - button:
         text: "⏎"
         button_type: "ENTER"
+    - button:
+        text: "ABC"
+        button_type: "SWITCHER"
+        additional_data: "UPPERCASE"
+    - button:
+        text: "A → Ą"
+        button_type: "SWITCHER"
+        additional_data: "DIACRITICS"
+    - button:
+        text: "FUNC"
+        button_type: "POINTER"
+        additional_data: "ACTIONS"
+  - row:
+    - button:
+        text: "."
+        button_type: "CHARACTER"
+    - button:
+        text: ","
+        button_type: "CHARACTER"
+    - button:
+        text: "?"
+        button_type: "CHARACTER"
+    - button:
+        text: "!"
+        button_type: "CHARACTER"
+    - button:
+        text: ";"
+        button_type: "CHARACTER"
+    - button:
+        text: ":"
+        button_type: "CHARACTER"
+    - button:
+        text: "\\"
+        button_type: "CHARACTER"
+  - row:
+    - button:
+        text: "("
+        button_type: "CHARACTER"
+    - button:
+        text: ")"
+        button_type: "CHARACTER"
+    - button:
+        text: "@"
+        button_type: "CHARACTER"
+    - button:
+        text: "'"
+        button_type: "CHARACTER"
+    - button:
+        text: "\""
+        button_type: "CHARACTER"
+    - button:
+        text: "<"
+        button_type: "CHARACTER"
+    - button:
+        text: ">"
+        button_type: "CHARACTER"
+  - row:
+    - button:
+        text: "+"
+        button_type: "CHARACTER"
+    - button:
+        text: "-"
+        button_type: "CHARACTER"
+    - button:
+        text: "="
+        button_type: "CHARACTER"
+    - button:
+        text: "_"
+        button_type: "CHARACTER"
+    - button:
+        text: "🡑"
+        button_type: "UP_ARROW"
+    - button:
+        text: "🡓"
+        button_type: "DOWN_ARROW"
     - button:
         text: "←"
         button_type: "LEFT_ARROW"
     - button:
         text: "→"
         button_type: "RIGHT_ARROW"
-    - button:
-        text: "ABC"
-        button_type: "SWITCHER"
-        additional_data: "UPPERCASE"
-
