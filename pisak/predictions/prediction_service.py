@@ -3,11 +3,11 @@ Threaded prediction service that generates word predictions without blocking the
 """
 import random
 import threading
-import time
 from typing import Callable, Optional
 from queue import Queue
 
 from pisak.predictions.dummy_predictions import available_words, N_WORDS
+from pisak.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
 
 
 class PredictionService:
@@ -16,17 +16,37 @@ class PredictionService:
     This ensures that prediction generation doesn't block UI operations like scanning.
     """
     
-    def __init__(self, n_words: int = N_WORDS):
+    def __init__(self, n_words: int = N_WORDS, use_real_model: bool = True, 
+                 model_dir: str = None, beam_width: int = 25, max_word_length: int = 10):
         """
         Initialize the prediction service.
         
         :param n_words: Number of words to predict
+        :param use_real_model: If True, use LSTM model. If False, use dummy predictions.
+        :param model_dir: Directory containing model.pt and spm_pl.model. If None, uses predictions directory.
+        :param beam_width: Maximum number of partial words to keep in beam (only used with real model)
+        :param max_word_length: Maximum number of tokens per word (only used with real model)
         """
         self._n_words = n_words
+        self._use_real_model = use_real_model
         self._request_queue = Queue()
         self._worker_thread: Optional[threading.Thread] = None
         self._running = False
         self._callback: Optional[Callable[[list[str]], None]] = None
+        self._beam_searcher: Optional[WordPredictionBeamSearch] = None
+        
+        # Initialize beam searcher if using real model
+        if self._use_real_model:
+            try:
+                self._beam_searcher = create_beam_searcher(
+                    model_dir=model_dir,
+                    beam_width=beam_width,
+                    max_word_length=max_word_length
+                )
+            except Exception as e:
+                print(f"Warning: Could not load real model: {e}")
+                print("Falling back to dummy predictions.")
+                self._use_real_model = False
         
     def start(self):
         """Start the worker thread"""
@@ -102,17 +122,40 @@ class PredictionService:
     def _generate_predictions(self, text: str, cursor_position: int) -> list[str]:
         """
         Generate word predictions based on current text and cursor position.
-        Currently returns random words, but can be extended for more sophisticated predictions.
+        Uses beam search with LSTM model if available, otherwise falls back to dummy predictions.
         
         :param text: Current text content
         :param cursor_position: Current cursor position
         :return: List of predicted words
         """
-        # Simulate processing delay (300ms) to test non-blocking behavior
-        time.sleep(0.3)
+        if self._use_real_model and self._beam_searcher is not None:
+            # Use real model with beam search
+            try:
+                # Get context up to cursor position
+                context = text[:cursor_position] if cursor_position > 0 else text
+                
+                # Get top k words using beam search
+                top_words = self._beam_searcher.get_top_k_words(context, k=self._n_words)
+                
+                # Extract just the word texts
+                predictions = [word.upper() for word, prob, num_tokens in top_words]
+                
+                # Pad with dummy words if we got fewer than requested
+                if len(predictions) < self._n_words and available_words:
+                    remaining = self._n_words - len(predictions)
+                    dummy_words = random.sample(list(available_words), 
+                                              min(remaining, len(available_words)))
+                    predictions.extend(dummy_words)
+                
+                return predictions[:self._n_words]
+            except Exception as e:
+                print(f"Error generating predictions with real model: {e}")
+                # Fall through to dummy predictions
+                pass
         
-        # For now, just return random words from available_words
-        # In the future, this could analyze the text and provide context-aware predictions
+        # Fall back to dummy predictions
+        # Simulate processing delay (300ms) to test non-blocking behavior
+        # time.sleep(0.3)
         
         if not available_words:
             return [f"WORD{i+1}" for i in range(self._n_words)]

@@ -3,3 +3,5 @@ PyYAML==6.0.3
 pytest==9.0.1
 pytest-qt==4.5.0
 yapper-tts==0.7.1
+torch>=2.0.0
+sentencepiece>=0.1.99

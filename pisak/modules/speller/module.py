@@ -44,8 +44,7 @@ class PisakSpellerModule(PisakBaseModule):
         self.set_central_widget(PisakRowWidget(parent=self))
 
         # Create Components
-        words = ["TEST1", "TEST2", "TEST3", "TEST4", "TEST5", 
-                 "TEST6", "TEST7", "TEST8", "TEST9", "TEST10"]
+        words = ["CZEŚĆ", "CZY", "JAK", "JESTEM", "NIE"]
         self._word_column = WordColumnComponent(self.centralWidget(), words=words)
         self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
         
