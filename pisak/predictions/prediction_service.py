@@ -143,9 +143,8 @@ class PredictionService:
                 # Pad with dummy words if we got fewer than requested
                 if len(predictions) < self._n_words and available_words:
                     remaining = self._n_words - len(predictions)
-                    dummy_words = random.sample(list(available_words), 
-                                              min(remaining, len(available_words)))
-                    predictions.extend(dummy_words)
+                    empty_predictions = [""] * remaining
+                    predictions.extend(empty_predictions)
                 
                 return predictions[:self._n_words]
             except Exception as e:

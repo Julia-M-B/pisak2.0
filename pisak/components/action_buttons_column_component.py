@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6 import QtGui
+from PySide6.QtWidgets import QLabel
+from PySide6.QtCore import Qt
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakColumnWidget
 from pisak.widgets.buttons import PisakButton, ButtonType
@@ -24,16 +26,35 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
     def __init__(self, parent):
         super().__init__(parent, strategy=BackToParentStrategy())
         self._icons_base_path = os.path.join(os.path.dirname(__file__), "..", "config_files/icons")
+        # Add header image (non-scannable)
+        self._add_header_image()
         # Create buttons
         self._create_buttons()
         
         # Set up layout
         self.set_layout()
-        
+
         # Add some spacing between buttons
         self.layout.setSpacing(10)
         # self.layout.addStretch()
 
+    def _add_header_image(self):
+        """Add the header image at the top of the column (non-scannable)"""
+        icon_path = os.path.join(self._icons_base_path, "funkcjenapis.svg")
+        header_label = QLabel(self)
+        header_label.setPixmap(QtGui.QPixmap(icon_path))
+        header_label.setAlignment(Qt.AlignCenter)
+        header_label.setScaledContents(True)
+        header_label.setStyleSheet(
+            """
+            max-height: 57px;
+            max-width: 142px;
+            """
+        )
+        # Add directly to layout (not via add_item) so it's not scannable
+        # We'll insert it at position 0 after set_layout is called
+        self._header_label = header_label
+        self.add_item(self._header_label)
     
     def _create_buttons(self):
         """Create all action buttons and connect their signals"""
