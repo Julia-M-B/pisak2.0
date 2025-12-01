@@ -1,7 +1,10 @@
+import os
 from enum import Enum, auto
 from typing import Any
 
-from PySide6.QtGui import QFocusEvent, QFont
+from PySide6 import QtGui
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QFocusEvent, QFont, Qt
 from PySide6.QtWidgets import QPushButton
 from pisak.scanning.scannable import PisakScannableItem
 from pisak.scanning.strategies import BackToParentStrategy
@@ -29,6 +32,7 @@ class PisakButton(QPushButton, PisakScannableItem):
         super().__init__(parent=parent, text=text)
         if icon:
             self.setIcon(icon)
+            self.setIconSize(QSize(32, 32))
         self._scanning_strategy = scanning_strategy
         self._text = text
         self._button_type = button_type
@@ -53,6 +57,7 @@ class PisakButton(QPushButton, PisakScannableItem):
                             min-height: 50px;
                             font-weight: bold;
                             """)
+        self.setLayoutDirection(Qt.RightToLeft)
 
     @property
     def text(self):
@@ -93,6 +98,8 @@ class PisakButton(QPushButton, PisakScannableItem):
                             border-radius: 5px;
                             min-height: 50px;
                             font-weight: bold;
+                            qproperty-iconPosition: Right;
+                            qproperty-iconSpacing: 10;
                             """)
 
     def reset_highlight_self(self):
@@ -100,6 +107,7 @@ class PisakButton(QPushButton, PisakScannableItem):
 
 class PisakButtonBuilder:
     def __init__(self):
+        self._icon_base_path = os.path.join(os.path.dirname(__file__), "..", "config_files/icons")
         self._text = ""
         self._icon = None
         self._scanning_strategy = BackToParentStrategy()
@@ -133,6 +141,10 @@ class PisakButtonBuilder:
         """
         if 'text' in button_dict:
             self.set_text(button_dict['text'])
+        if 'icon' in button_dict:
+            icon_path = os.path.join(self._icon_base_path, button_dict['icon'])
+            icon = QtGui.QIcon(icon_path)
+            self.set_icon(icon)
         if 'button_type' in button_dict:
             # Convert string to ButtonType enum if needed
             button_type_str = button_dict['button_type']
@@ -150,8 +162,6 @@ class PisakButtonBuilder:
                 if hasattr(KeyboardType, additional_data):
                     additional_data = getattr(KeyboardType, additional_data)
             self.set_additional_data(additional_data)
-        if 'icon' in button_dict:
-            self.set_icon(button_dict['icon'])
         return self
 
     def build(self, parent):

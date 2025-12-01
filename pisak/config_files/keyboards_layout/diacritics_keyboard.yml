@@ -1,20 +1,20 @@
 rows:
   - row:
       - button:
-          text: "PRED"
+          icon: "predykcja.svg"
           button_type: "POINTER"
           additional_data: "PREDICTIONS"
       - button:
-          text: "⌫"
+          icon: "backspace.svg"
           button_type: "BACKSPACE"
       - button:
-          text: "␣"
+          icon: "spacja.svg"
           button_type: "SPACE"
       - button:
-          text: "⏎"
+          icon: "enter.svg"
           button_type: "ENTER"
       - button:
-          text: "FUNC"
+          icon: "funkcje.svg"
           button_type: "POINTER"
           additional_data: "ACTIONS"
   - row:
@@ -46,10 +46,10 @@ rows:
           text: "Ó"
           button_type: "CHARACTER"
       - button:
-          text: "🡑"
+          icon: "nav_up.svg"
           button_type: "UP_ARROW"
       - button:
-          text: "🡓"
+          icon: "nav_down.svg"
           button_type: "DOWN_ARROW"
   - row:
       - button:
@@ -62,8 +62,8 @@ rows:
           text: "Ż"
           button_type: "CHARACTER"
       - button:
-          text: "←"
+          icon: "nav_left.svg"
           button_type: "LEFT_ARROW"
       - button:
-          text: "→"
+          icon: "nav_right.png"
           button_type: "RIGHT_ARROW"

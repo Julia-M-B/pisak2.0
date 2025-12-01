@@ -22,7 +22,7 @@ class KeyboardDisplayComponent(PisakColumnWidget):
         # todo: create a function that would create and setup a keyboard for each config in keyboards_config_path
 
         # Create keyboards from config files
-        config_dir = os.path.join(os.path.dirname(__file__), "..", "config_files")
+        config_dir = os.path.join(os.path.dirname(__file__), "..", "config_files/keyboards_layout")
         uppercase_config = os.path.join(config_dir, "uppercase_keyboard.yml")
         diacritics_config = os.path.join(config_dir, "diacritics_keyboard.yml")
         numerical_config = os.path.join(config_dir, "numerical_keyboard.yml")

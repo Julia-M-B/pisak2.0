@@ -2,10 +2,11 @@
 Action buttons column component for the PisakSpeller module.
 Provides buttons for various text manipulation and control actions.
 """
-
+import os
 from datetime import datetime
 from pathlib import Path
 
+from PySide6 import QtGui
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakColumnWidget
 from pisak.widgets.buttons import PisakButton, ButtonType
@@ -22,6 +23,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
     
     def __init__(self, parent):
         super().__init__(parent, strategy=BackToParentStrategy())
+        self._icons_base_path = os.path.join(os.path.dirname(__file__), "..", "config_files/icons")
         # Create buttons
         self._create_buttons()
         
@@ -39,7 +41,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Clear button
         self._clear_button = PisakButton(
             parent=self,
-            text="NOWY",
+            text="NOWY\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "nowy_dokument.svg")),
             button_type=ButtonType.CLEAR
         )
         self.add_item(self._clear_button)
@@ -47,7 +50,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Keyboard button
         self._keyboard_button = PisakButton(
             parent=self,
-            text="KLAWIATURA",
+            text="KLAWIATURA\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "klawiatura.svg")),
             button_type=ButtonType.POINTER,
             additional_data="KEYBOARDS"
         )
@@ -56,7 +60,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Predictions button
         self._predictions_button = PisakButton(
             parent=self,
-            text="PREDYKCJE",
+            text="PREDYKCJE\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "predykcja.svg")),
             button_type=ButtonType.POINTER,
             additional_data="PREDICTIONS"
         )
@@ -65,7 +70,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Save text button
         self._save_button = PisakButton(
             parent=self,
-            text="ZAPISZ",
+            text="ZAPISZ\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "zapisz.svg")),
             button_type=ButtonType.SAVE
         )
         self.add_item(self._save_button)
@@ -73,7 +79,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Upload text button
         self._upload_button = PisakButton(
             parent=self,
-            text="WCZYTAJ",
+            text="WCZYTAJ\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "wczytaj.svg")),
             button_type=ButtonType.UPLOAD
         )
         self.add_item(self._upload_button)
@@ -81,7 +88,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Read text button (stops scanning for now)
         self._read_button = PisakButton(
             parent=self,
-            text="CZYTAJ",
+            text="CZYTAJ\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "przeczytaj.svg")),
             button_type=ButtonType.READ
         )
         self.add_item(self._read_button)
@@ -89,7 +97,8 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         # Exit button
         self._exit_button = PisakButton(
             parent=self,
-            text="WYJŚCIE",
+            text="WYJŚCIE\t",
+            icon=QtGui.QIcon(os.path.join(self._icons_base_path, "exit.svg")),
             button_type=ButtonType.EXIT
         )
         self.add_item(self._exit_button)
