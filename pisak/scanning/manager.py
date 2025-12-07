@@ -1,4 +1,8 @@
-from typing import Optional, Self
+from typing import Optional
+try:
+    from typing import Self
+except ImportError:
+    from  typing_extensions import Self
 from dataclasses import dataclass
 
 from pisak.emitters import EventEmitter

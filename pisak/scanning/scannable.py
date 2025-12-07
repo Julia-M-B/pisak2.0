@@ -1,5 +1,9 @@
 import uuid
-from typing import Self, Any, Optional
+from typing import Any, Optional
+try:
+    from typing import Self
+except ImportError:
+    from  typing_extensions import Self
 
 from PySide6.QtGui import QFocusEvent
 from PySide6.QtWidgets import QWidget
