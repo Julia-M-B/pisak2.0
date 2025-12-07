@@ -61,6 +61,7 @@ else
 fi
 
 # Navigate to pisak2.0 directory
+cd
 if [ -d "pisak2.0" ]; then
     cd pisak2.0
 else
