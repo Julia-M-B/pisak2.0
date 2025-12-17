@@ -73,21 +73,6 @@ class LSTMModelWrapper:
         if n_layers == 0:
             n_layers = 3  # default
 
-        # Check if weights are tied by checking if output.weight exists and is different from embedding.weight
-        # If weights are tied, output.weight might not be in state_dict, or it might be the same as embedding.weight
-        # weights_tied = False
-        # if 'output.weight' in state_dict and 'embedding.weight' in state_dict:
-        #     # Check if they are the same tensor (same memory location)
-        #     output_weight = state_dict['output.weight']
-        #     embedding_weight = state_dict['embedding.weight']
-        #     # If shapes match and they're equal, weights might be tied
-        #     if output_weight.shape == embedding_weight.shape:
-        #         if torch.equal(output_weight, embedding_weight):
-        #             weights_tied = True
-        # elif 'output.weight' not in state_dict:
-        #     # If output.weight is missing, weights are likely tied
-        #     weights_tied = True
-        
         # Create model
         self.model = LSTMLanguageModel(
             vocab_size=vocab_size,
@@ -95,26 +80,22 @@ class LSTMModelWrapper:
             hidden_dim=hidden_dim,
             n_layers=n_layers
         )
-        
-        # Load state dict (with strict=False to handle potential mismatches)
-        try:
-            self.model.load_state_dict(state_dict, strict=True)
-        except RuntimeError:
-            # If strict loading fails, try without strict (might work if only tied weights differ)
-            self.model.load_state_dict(state_dict, strict=False)
+
+
+        self.model.load_state_dict(state_dict, strict=True)
         self.model.to(self.device)
         self.model.eval()
-        
+
         self.vocab_size = vocab_size
         self.seq_len = 32
-    
+
     def predict(self, context_tokens: List[int]) -> List[float]:
         """
         Predict next token probabilities given context tokens.
-        
+
         Args:
             context_tokens: List of token IDs representing the context
-            
+
         Returns:
             List of probabilities for each token in vocabulary
         """
@@ -124,20 +105,20 @@ class LSTMModelWrapper:
 
         # trim context tokens to proper sequence length
         context_tokens = context_tokens[-self.seq_len:]
-        
+
         # Convert to tensor and add batch dimension
         input_ids = torch.LongTensor([context_tokens]).to(self.device)
-        
+
         with torch.no_grad():
             # Get logits for the last position
             logits, _ = self.model(input_ids)
             # logits shape: (batch=1, seq_len, vocab_size)
             # Get logits for the last token position
             last_logits = logits[0, -1, :]  # (vocab_size,)
-            
+
             # Convert to probabilities using softmax
             probs = torch.softmax(last_logits, dim=0)
-            
+
             # Convert to list
             return probs.cpu().tolist()
 
@@ -146,37 +127,39 @@ class SentencePieceTokenizer:
     """
     Wrapper for SentencePiece tokenizer.
     """
-    
+
     def __init__(self, model_path: str):
         """
         Initialize the tokenizer.
-        
+
         Args:
             model_path: Path to .model file (e.g., spm_pl.model)
         """
         self.sp = spm.SentencePieceProcessor()
         self.sp.load(model_path)
         self.vocab_size = self.sp.get_piece_size()
-    
+        self.id2piece = self._create_id_to_piece_mapping()
+        self.piece2id = self._create_piece_to_id_mapping()
+
     def encode(self, text: str) -> List[int]:
         """
         Encode text to token IDs.
-        
+
         Args:
             text: Input text string
-            
+
         Returns:
             List of token IDs
         """
         return self.sp.encode(text, out_type=int)
-    
+
     def decode(self, token_ids: List[int]) -> str:
         """
         Decode token IDs to text.
-        
+
         Args:
             token_ids: List of token IDs
-            
+
         Returns:
             Decoded text string
         """
@@ -188,46 +171,47 @@ class SentencePieceTokenizer:
     def id_to_piece(self, token: int) -> str:
         return self.sp.id_to_piece(token)
 
+    def _create_id_to_piece_mapping(self) -> dict[int, str]:
+        id_piece_pairs = [(i, self.id_to_piece(i)) for i in range(self.vocab_size)]
+        return dict(id_piece_pairs)
+
+    def _create_piece_to_id_mapping(self) -> dict[str, int]:
+        piece_id_pairs = [(self.id_to_piece(i), i) for i in
+                          range(self.vocab_size)]
+        return dict(piece_id_pairs)
 
 def load_model_and_tokenizer(model_dir: str = None, device: str = None):
     """
     Convenience function to load both model and tokenizer.
-    
+
     Args:
-        model_dir: Directory containing model.pt and spm_pl.model. 
+        model_dir: Directory containing model.pt and spm_pl.model.
                   If None, uses predictions directory.
         device: Device to run model on. If None, auto-detect.
-        
+
     Returns:
         Tuple of (model_wrapper, tokenizer)
     """
     if model_dir is None:
         # Get directory of this file
         model_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     model_path = os.path.join(model_dir, 'model.pt')
     tokenizer_path = os.path.join(model_dir, 'spm_pl.model')
-    
+
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model file not found: {model_path}")
     if not os.path.exists(tokenizer_path):
         raise FileNotFoundError(f"Tokenizer file not found: {tokenizer_path}")
-    
+
     model = LSTMModelWrapper(model_path, device=device)
     tokenizer = SentencePieceTokenizer(tokenizer_path)
-    
+
     return model, tokenizer
 
 def main():
     model, tokenizer = load_model_and_tokenizer(device="cpu")
-    text = "to jest test spacji i tego czy tokeny są poprawnie wyznaczone "
     text2 = " tokenizer "
-    # pieces = tokenizer.encode_as_pieces(text2)
-    # piece = tokenizer.id_to_piece(4)
-    # print(piece.startswith("▁"))
-    tokens = tokenizer.encode(text)
-    tokens2 = tokenizer.encode(text2)
-
     print(tokenizer.encode_as_pieces(text2))
 
 if __name__ == "__main__":
