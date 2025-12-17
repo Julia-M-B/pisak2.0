@@ -1,14 +1,13 @@
 """
 Threaded prediction service that generates word predictions without blocking the main UI thread.
 """
-import random
 import threading
 from typing import Callable, Optional
 from queue import Queue
 
-from pisak.predictions.dummy_predictions import available_words, N_WORDS
 from pisak.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
 
+N_WORDS = 5
 
 class PredictionService:
     """
@@ -140,8 +139,8 @@ class PredictionService:
                 # Extract just the word texts
                 predictions = [word.upper() for word, prob, num_tokens in top_words]
                 
-                # Pad with dummy words if we got fewer than requested
-                if len(predictions) < self._n_words and available_words:
+                # Pad with empty string if we got fewer than requested
+                if len(predictions) < self._n_words:
                     remaining = self._n_words - len(predictions)
                     empty_predictions = [""] * remaining
                     predictions.extend(empty_predictions)
@@ -151,17 +150,7 @@ class PredictionService:
                 print(f"Error generating predictions with real model: {e}")
                 # Fall through to dummy predictions
                 pass
-        
-        # Fall back to dummy predictions
-        # Simulate processing delay (300ms) to test non-blocking behavior
-        # time.sleep(0.3)
-        
-        if not available_words:
-            return [f"WORD{i+1}" for i in range(self._n_words)]
-        
-        # Sample random words
-        sample_size = min(self._n_words, len(available_words))
-        predictions = random.sample(list(available_words), sample_size)
+
         
         return predictions
 

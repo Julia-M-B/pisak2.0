@@ -340,7 +340,7 @@ def create_beam_searcher(model_dir: str = None, beam_width: int = 30,
     Returns:
         WordPredictionBeamSearch instance
     """
-    from model_loader import load_model_and_tokenizer
+    from pisak.predictions.model_loader import load_model_and_tokenizer
 
     model, tokenizer = load_model_and_tokenizer(model_dir=model_dir,
                                                 device=device)
