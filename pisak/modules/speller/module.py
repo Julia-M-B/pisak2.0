@@ -22,7 +22,7 @@ from pisak.components.column_components import WordColumnComponent
 from pisak.components.action_buttons_column_component import ActionButtonsColumnComponent, ActionButtonsHandler
 from pisak.components.keyboard import ButtonManager, ButtonClickHandler
 from pisak.modules.base_module import PisakBaseModule
-from pisak.adapters import KeyPressAdapter
+from pisak.adapters import KeyPressAdapter, MousePressAdapter
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakRowWidget
 from pisak.predictions.prediction_handler import PredictionHandler
@@ -84,8 +84,9 @@ class PisakSpellerModule(PisakBaseModule):
         self._keyboard_component.display.subscribe(self._prediction_handler)
 
         # Set up scanning to control the Main Row (switching between WordColumn and RightColumn)
-        self._key_adapter = KeyPressAdapter(self, parent=self)
-        self._key_adapter.subscribe(ScanningKeyHandler(self._scanning_manager, self.centralWidget()))
+        # self._key_adapter = KeyPressAdapter(self, parent=self)
+        self._mouse_adapter = MousePressAdapter(self, parent=self)
+        self._mouse_adapter.subscribe(ScanningSwitchHandler(self._scanning_manager, self.centralWidget()))
 
         self.init_ui()
     
@@ -96,7 +97,7 @@ class PisakSpellerModule(PisakBaseModule):
             self._prediction_handler.stop()
         super().closeEvent(event)
 
-class ScanningKeyHandler:
+class ScanningSwitchHandler:
     """Handler for key "1" to control scanning"""
     
     def __init__(self, scanning_manager, main_scannable_item):
@@ -105,31 +106,31 @@ class ScanningKeyHandler:
     
     def handle_event(self, event: AppEvent) -> None:
         """Handle key press events - only process key "1" """
-        if event.type != AppEventType.KEY_PRESSED:
+        if event.type != AppEventType.SWITCH_PRESSED:
             return
         
-        key_data = event.data
-        if not isinstance(key_data, dict):
-            return
-        
-        key = key_data.get('key')
-        text = key_data.get('text', '')
-        # Check for key "1" - can be Qt.Key_1, ASCII code 0x31, or text '1'
-        # In PySide6, key codes might vary, so check multiple possibilities
-        is_key_1 = (text == '1' or 
-                   key == 0x31 or  # ASCII code for '1'
-                   key == getattr(Qt, 'Key_1', None) or
-                   key == getattr(Qt.Key, 'Key_1', None))
-        
-        if is_key_1:
-            if not self._scanning_manager.is_scanning:
-                # Start scanning from the main row (word column + keyboards)
-                scannable_items = getattr(self._main_scannable_item, 'scannable_items', [])
-                if len(scannable_items) > 0:
-                    self._scanning_manager.start_scanning(self._main_scannable_item)
-            else:
-                # Activate the currently focused item
-                self._scanning_manager.activate_current_item()
+        # key_data = event.data
+        # if not isinstance(key_data, dict):
+        #     return
+        #
+        # key = key_data.get('key')
+        # text = key_data.get('text', '')
+        # # Check for key "1" - can be Qt.Key_1, ASCII code 0x31, or text '1'
+        # # In PySide6, key codes might vary, so check multiple possibilities
+        # is_key_1 = (text == '1' or
+        #            key == 0x31 or  # ASCII code for '1'
+        #            key == getattr(Qt, 'Key_1', None) or
+        #            key == getattr(Qt.Key, 'Key_1', None))
+        #
+        # if is_key_1:
+        if not self._scanning_manager.is_scanning:
+            # Start scanning from the main row (word column + keyboards)
+            scannable_items = getattr(self._main_scannable_item, 'scannable_items', [])
+            if len(scannable_items) > 0:
+                self._scanning_manager.start_scanning(self._main_scannable_item)
+        else:
+            # Activate the currently focused item
+            self._scanning_manager.activate_current_item()
 
 
 

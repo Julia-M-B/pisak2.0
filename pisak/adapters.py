@@ -46,10 +46,38 @@ class KeyPressAdapter(QtEventAdapter):
             self._original_key_press(event)
 
         # Emit framework-agnostic event
-        app_event = AppEvent(AppEventType.KEY_PRESSED, {
+        app_event = AppEvent(AppEventType.SWITCH_PRESSED, {
             'key': event.key(),
             'text': event.text(),
             'modifiers': event.modifiers()
+        })
+        self.emit_event(app_event)
+
+class MousePressAdapter(QtEventAdapter):
+    """
+    Adapter PySide'owego eventu `mousePressEvent`.
+    Do implementacji `mousePressEvent` danego widgetu dodaje emitowanie
+    eventu (troche dziala jak dekorator).
+    """
+
+    def __init__(self, widget: QWidget, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        self._widget = widget
+        self._original_mouse_press = widget.mousePressEvent
+        # Override mousePressEvent to emit events
+        widget.mousePressEvent = self._on_mouse_press
+
+    def _on_mouse_press(self, event: QKeyEvent):
+        """Convert Qt mousePressEvent to AppEvent"""
+        # Call original handler first
+        if self._original_mouse_press:
+            self._original_mouse_press(event)
+
+        # Emit framework-agnostic event
+        app_event = AppEvent(AppEventType.SWITCH_PRESSED, {
+            # 'key': event.key(),
+            # 'text': event.text(),
+            # 'modifiers': event.modifiers()
         })
         self.emit_event(app_event)
 
