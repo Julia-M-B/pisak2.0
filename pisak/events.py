@@ -3,7 +3,7 @@ from typing import Any
 
 class AppEventType(Enum):
     BUTTON_CLICKED = auto()  # event klikniecia na przycisk
-    KEY_PRESSED = auto()  # event wcisniecia przycisku na fizycznej klawiaturze
+    SWITCH_PRESSED = auto()  # event sygnalu ze switcha
     WIDGET_FOCUSED = auto()  # event posiadania focusu przez widget
     WIDGET_UNFOCUSED = auto()  # event nieposiadania focusu przez widget
     TIMER_TIMEOUT = auto()  # event zwiazany z przerzucaniem focusu w skanowaniu w petli
