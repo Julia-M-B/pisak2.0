@@ -2,6 +2,7 @@
 Run Speller module
 """
 
+import logging
 import sys
 
 from PySide6.QtWidgets import QApplication
@@ -9,10 +10,13 @@ from PySide6.QtGui import Qt
 
 from pisak.modules.speller.module import PisakSpellerModule
 
+logger = logging.getLogger(__name__)
+
 def main():
     """Create and run the Speller module test"""
         
     app = QApplication(sys.argv)
+    logger.info("Application started.")
 
     speller_module = PisakSpellerModule()
     
@@ -23,7 +27,7 @@ def main():
     
     # Run the application event loop
     exit_code = app.exec()
-    print("\nApplication closed.")
+    logger.info("Application closed.")
     sys.exit(exit_code)
         
 

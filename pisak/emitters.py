@@ -7,6 +7,10 @@ from typing import Any
 
 from pisak.events import BaseEvent
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(__name__)
+
 class EventEmitter:
     """
     Podstawowa implementacja EventEmittera - obiektu, ktory emituje wewnetrzne eventy
@@ -35,4 +39,4 @@ class EventEmitter:
                 handler.handle_event(event)
             except Exception as e:
                 # Log error but don't break the event chain
-                print(f"Error in handler {handler}: {e}")
+                logger.debug("Error in handler %s: %s", handler, e)

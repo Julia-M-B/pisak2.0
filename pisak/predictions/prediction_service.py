@@ -6,6 +6,9 @@ from typing import Callable, Optional
 from queue import Queue
 
 from pisak.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(__name__)
 
 N_WORDS = 5
 
@@ -33,6 +36,8 @@ class PredictionService:
         self._running = False
         self._callback: Optional[Callable[[list[str]], None]] = None
         self._beam_searcher: Optional[WordPredictionBeamSearch] = None
+
+        logger.debug("Joł")
         
         # Initialize beam searcher if using real model
         if self._use_real_model:
@@ -43,8 +48,8 @@ class PredictionService:
                     max_word_length=max_word_length
                 )
             except Exception as e:
-                print(f"Warning: Could not load real model: {e}")
-                print("Falling back to dummy predictions.")
+                logger.debug("Warning: Could not load real model: %s", e)
+                logger.debug("Falling back to dummy predictions.")
                 self._use_real_model = False
         
     def start(self):
@@ -147,7 +152,7 @@ class PredictionService:
                 
                 return predictions[:self._n_words]
             except Exception as e:
-                print(f"Error generating predictions with real model: {e}")
+                logger.debug("Error generating predictions with real model: %s", e)
                 # Fall through to dummy predictions
                 pass
 

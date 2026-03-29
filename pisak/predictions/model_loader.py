@@ -7,6 +7,10 @@ import torch.nn as nn
 import sentencepiece as spm
 from typing import List
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(__name__)
+
 
 class LSTMLanguageModel(nn.Module):
     """LSTM Language Model architecture."""
@@ -212,7 +216,7 @@ def load_model_and_tokenizer(model_dir: str = None, device: str = None):
 def main():
     model, tokenizer = load_model_and_tokenizer(device="cpu")
     text2 = " tokenizer "
-    print(tokenizer.encode_as_pieces(text2))
+    logger.debug("%s", tokenizer.encode_as_pieces(text2))
 
 if __name__ == "__main__":
     main()

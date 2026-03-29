@@ -15,6 +15,9 @@ from pisak.widgets.buttons import PisakButton, ButtonType
 from pisak.widgets.text_display import PisakDisplay
 from pisak.scanning.strategies import BackToParentStrategy
 from yapper import Yapper, PiperSpeaker, PiperVoicePoland
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(__name__)
 
 
 class ActionButtonsColumnComponent(PisakColumnWidget):
@@ -218,7 +221,7 @@ class ActionButtonsHandler:
 
         # If there's nothing to save, return
         if not history:
-            print("No text to save")
+            logger.debug("No text to save")
             return
 
         # Create filename with timestamp
@@ -235,9 +238,9 @@ class ActionButtonsHandler:
                     if i < len(history) - 1:
                         f.write("\n\n")
 
-            print(f"Text saved to: {filepath}")
+            logger.debug("Text saved to: %s", filepath)
         except Exception as e:
-            print(f"Error saving text: {e}")
+            logger.debug("Error saving text: %s", e)
 
     def _on_pointer_clicked(self, pointed_item):
         scannable_items = getattr(pointed_item, 'scannable_items', [])
@@ -263,7 +266,7 @@ class ActionButtonsHandler:
             )
 
             if not text_files:
-                print("No saved text files found")
+                logger.debug("No saved text files found")
                 return
 
             # Get the most recent file
@@ -279,9 +282,9 @@ class ActionButtonsHandler:
             self._text_display.update_display()
             self._text_display.emit_text_changed()
 
-            print(f"Text loaded from: {latest_file}")
+            logger.debug("Text loaded from: %s", latest_file)
         except Exception as e:
-            print(f"Error loading text: {e}")
+            logger.debug("Error loading text: %s", e)
 
     def _on_read_clicked(self):
         """
@@ -299,6 +302,7 @@ class ActionButtonsHandler:
 
     def _on_exit_clicked(self):
         self._module.close()
+        logger.info("Exit button clicked.")
 
     def add_item_reference(self, item, key):
         if key not in self._items_dict.keys():

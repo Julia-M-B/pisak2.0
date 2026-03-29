@@ -12,6 +12,10 @@ from pisak.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER
 from pisak.adapters import TimerAdapter
 from pisak.handlers import TimerTimeoutHandler
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(__name__)
+
 @dataclass
 class ScanningState:
     is_scanning: bool = False
@@ -77,6 +81,8 @@ class ScanningManager(EventEmitter):
         self.emit_event(AppEvent(AppEventType.SCANNING_STARTED, item))
         self._focus_next_item()
 
+        logger.debug("Started scanning item %s", self._scanning_state.current_item)
+
     def stop_scanning(self) -> None:
         """Stop current scanning"""
         if not self._scanning_state.is_scanning:
@@ -86,6 +92,8 @@ class ScanningManager(EventEmitter):
         
         # Reset iterator counter on old item before clearing it
         current_item = self._scanning_state.current_item
+        logger.debug("Stopped scanning item %s",
+                    self._scanning_state.current_item)
         if current_item:
             current_item.iter_counter = 0
             current_item.reset_highlight_self()
