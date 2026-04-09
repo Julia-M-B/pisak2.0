@@ -7,6 +7,7 @@ from queue import Queue
 
 from pisak.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
 from pisak.logging_config import get_module_logger
+from torch import device
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
 

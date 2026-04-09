@@ -56,8 +56,8 @@ class CompletedWord:
 class WordPredictionBeamSearch:
     """Efficient beam search for finding top-K most probable next words."""
 
-    def __init__(self, model, tokenizer, beam_width: int = 30,
-                 max_word_length: int = 10):
+    def __init__(self, model, tokenizer, beam_width: int = 50,
+                 max_word_length: int = 15, alpha: float = 0.2):
         """
         Args:
             model: LSTM model with predict() method that returns token probabilities
@@ -71,6 +71,7 @@ class WordPredictionBeamSearch:
         self.max_word_length = max_word_length
         self.inference_count = 0
         self.start_new_word_char: str = "▁"
+        self.alpha = alpha
 
     def starts_new_word(self, token_id: int) -> bool:
         """Check if a token starts a new word (piece starts with '▁' marker)."""
@@ -305,6 +306,20 @@ class WordPredictionBeamSearch:
         top_k = sorted(token_prob_pairs, key=lambda x: x[1], reverse=True)[:k]
         return top_k
 
+    def get_word_probability(self, context_text: str, next_word: str):
+        context_text = context_text.strip()
+        next_word = " " + next_word.strip()
+        context_tokens = self.tokenizer.encode(context_text)
+        word_tokens = self.tokenizer.encode(next_word)
+        log_prob = 0
+        for i in range(len(word_tokens)):
+            tokens_probs = self.model.predict(context_tokens + word_tokens[:i])
+            prob = tokens_probs[word_tokens[i]]
+            log_prob += math.log(prob)
+        return math.exp(log_prob / (len(word_tokens) ** self.alpha))
+
+
+
     @staticmethod
     def _clean_context_text(context_text: str) -> str:
         context_text = context_text.lower()
@@ -339,7 +354,7 @@ class WordPredictionBeamSearch:
         new_tokens = current_prefix.tokens + [token_id]
         new_text = current_prefix.text + self.tokenizer.decode([token_id])
         new_log_prob = current_prefix.neg_log_prob - math.log(token_prob)
-        new_log_prob_normalised = new_log_prob / len(new_tokens)
+        new_log_prob_normalised = new_log_prob / (len(new_tokens) ** self.alpha)
         return BeamItem(
             neg_log_prob_normalised=new_log_prob_normalised,
             neg_log_prob=new_log_prob,
@@ -349,7 +364,8 @@ class WordPredictionBeamSearch:
 
 
 def create_beam_searcher(model_dir: str = None, beam_width: int = 30,
-                         max_word_length: int = 5, device: str = None):
+                         max_word_length: int = 5, device: str = None,
+                         alpha: float = 0.2, seq_len: int = 256):
     """
     Create a beam searcher with real model and tokenizer.
 
@@ -365,13 +381,15 @@ def create_beam_searcher(model_dir: str = None, beam_width: int = 30,
     from pisak.predictions.model_loader import load_model_and_tokenizer
 
     model, tokenizer = load_model_and_tokenizer(model_dir=model_dir,
-                                                device=device)
+                                                device=device,
+                                                seq_len=seq_len)
 
     return WordPredictionBeamSearch(
         model=model,
         tokenizer=tokenizer,
         beam_width=beam_width,
-        max_word_length=max_word_length
+        max_word_length=max_word_length,
+        alpha=alpha
     )
 
 if __name__ == "__main__":
