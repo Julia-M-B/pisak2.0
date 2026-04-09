@@ -9,6 +9,10 @@ from pisak.predictions.prediction_service import PredictionService
 from pisak.components.column_components import WordColumnComponent
 from pisak.emitters import EventEmitter
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="predictions", logger_name=__name__)
+
 
 class ThreadSafeEventAdapter(QObject, EventEmitter):
     """

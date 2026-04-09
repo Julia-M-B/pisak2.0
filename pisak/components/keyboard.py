@@ -4,6 +4,9 @@ from pisak.emitters import EventEmitter
 from pisak.events import AppEvent, AppEventType
 from pisak.widgets.containers import PisakColumnWidget, PisakRowWidget
 from pisak.widgets.buttons import PisakButtonBuilder, PisakButton, ButtonType
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="components", logger_name=__name__)
 
 class KeyboardType(Enum):
     UPPERCASE = auto()

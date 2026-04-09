@@ -7,6 +7,10 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QLayout
 from pisak.scanning.scannable import PisakScannableWidget
 from pisak.scanning.strategies import BackToParentStrategy
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="widgets", logger_name=__name__)
+
 
 class PisakContainerWidget(PisakScannableWidget):
     """

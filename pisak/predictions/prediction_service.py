@@ -8,7 +8,7 @@ from queue import Queue
 from pisak.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
 from pisak.logging_config import get_module_logger
 
-logger = get_module_logger(__name__)
+logger = get_module_logger(file_name="predictions", logger_name=__name__)
 
 N_WORDS = 5
 
@@ -36,8 +36,6 @@ class PredictionService:
         self._running = False
         self._callback: Optional[Callable[[list[str]], None]] = None
         self._beam_searcher: Optional[WordPredictionBeamSearch] = None
-
-        logger.debug("Joł")
         
         # Initialize beam searcher if using real model
         if self._use_real_model:

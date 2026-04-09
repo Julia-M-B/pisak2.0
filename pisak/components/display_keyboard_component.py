@@ -6,7 +6,9 @@ from pisak.widgets.containers import PisakColumnWidget
 from pisak.scanning.strategies import BackNLevelsStrategy
 from pisak.widgets.stacked_widgets import PisakStackedWidget, ItemSwitchedHandler
 from pisak.widgets.text_display import PisakDisplay, TextEditionHandler
+from pisak.logging_config import get_module_logger
 
+logger = get_module_logger(file_name="components", logger_name=__name__)
 
 class KeyboardDisplayComponent(PisakColumnWidget):
     def __init__(self, parent, scanning_manager, keyboards_config_paths: list[str] = None):

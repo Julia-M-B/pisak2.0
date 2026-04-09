@@ -10,6 +10,10 @@ from pisak.events import AppEvent, AppEventType
 from pisak.emitters import EventEmitter
 import html
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="widgets", logger_name=__name__)
+
 
 class PisakDisplay(QLabel, EventEmitter):
     """

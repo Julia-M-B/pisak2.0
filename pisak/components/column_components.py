@@ -6,7 +6,10 @@ from PySide6.QtCore import Qt
 from pisak.widgets.containers import PisakColumnWidget
 from pisak.widgets.buttons import PisakButton, ButtonType
 from pisak.scanning.strategies import BackToParentStrategy
+from pisak.logging_config import get_module_logger
 
+
+logger = get_module_logger(file_name="components", logger_name=__name__)
 
 class WordColumnComponent(PisakColumnWidget):
     """

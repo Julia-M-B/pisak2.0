@@ -17,7 +17,7 @@ from pisak.scanning.strategies import BackToParentStrategy
 from yapper import Yapper, PiperSpeaker, PiperVoicePoland
 from pisak.logging_config import get_module_logger
 
-logger = get_module_logger(__name__)
+logger = get_module_logger(file_name="components", logger_name=__name__)
 
 
 class ActionButtonsColumnComponent(PisakColumnWidget):

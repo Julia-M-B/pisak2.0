@@ -4,6 +4,10 @@ from pisak.events import AppEvent, AppEventType
 from pisak.scanning.scannable import PisakScannableItem
 from pisak.scanning.strategies import BackToParentStrategy
 
+from pisak.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="widgets", logger_name=__name__)
+
 class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     """
     Przechowuje różne obiekty i zarządza ich wyświetlaniem:
