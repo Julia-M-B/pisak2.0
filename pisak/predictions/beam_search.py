@@ -6,7 +6,7 @@ import unicodedata
 import re
 
 CLEAN_REGEX = re.compile(r"[^a-ząćęłńóśźż0-9\s]")
-MULTIPLE_WHITESPACE = re.compile(r"[ \t]+")
+MULTIPLE_WHITESPACE = re.compile(r"[ \t\n]+")
 
 from pisak.logging_config import get_module_logger
 
