@@ -162,7 +162,7 @@ class WordPredictionBeamSearch:
             logger.debug("  Beam pruned to %s items", self.beam_width)
 
         # Continue until we have k completed words or beam is exhausted
-        while beam and len(completed_words) < k and iteration < max_iterations:
+        while beam and len(completed_words) < (k * 2) and iteration < max_iterations:
             iteration += 1
             logger.debug("=== Iteration %s ===", iteration)
             logger.debug(
