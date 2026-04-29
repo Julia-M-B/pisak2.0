@@ -17,11 +17,11 @@ dependencies = [
 ]
 
 [project.scripts]
-pisak = "pisak.cli:main"
+start_app = "app.cli:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pisak*"]
+include = ["app*"]
