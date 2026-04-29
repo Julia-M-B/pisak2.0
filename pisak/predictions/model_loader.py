@@ -8,8 +8,10 @@ import sentencepiece as spm
 from typing import List
 
 from pisak.logging_config import get_module_logger
+from pisak.settings import DEFAULT_PREDICTION_MODEL_NAME
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
+MODEL_NAME_ENV_VAR = "PISAK_MODEL_NAME"
 
 
 class LSTMLanguageModel(nn.Module):
@@ -191,14 +193,21 @@ class SentencePieceTokenizer:
                           range(self.vocab_size)]
         return dict(piece_id_pairs)
 
-def load_model_and_tokenizer(model_dir: str = None, device: str = None, seq_len: int = 256):
+def load_model_and_tokenizer(
+    model_dir: str = None,
+    device: str = None,
+    seq_len: int = 256,
+    model_name: str | None = None,
+):
     """
     Convenience function to load both model and tokenizer.
 
     Args:
-        model_dir: Directory containing model.pt and spm_pl.model.
+        model_dir: Directory containing model and spm_pl.model files.
                   If None, uses predictions directory.
         device: Device to run model on. If None, auto-detect.
+        model_name: Model filename. If None, uses PISAK_MODEL_NAME env var
+                    and falls back to config default.
 
     Returns:
         Tuple of (model_wrapper, tokenizer)
@@ -207,7 +216,10 @@ def load_model_and_tokenizer(model_dir: str = None, device: str = None, seq_len:
         # Get directory of this file
         model_dir = os.path.dirname(os.path.abspath(__file__))
 
-    model_path = os.path.join(model_dir, 'model.pt')
+    if model_name is None:
+        model_name = os.getenv(MODEL_NAME_ENV_VAR, DEFAULT_PREDICTION_MODEL_NAME)
+
+    model_path = os.path.join(model_dir, model_name)
     tokenizer_path = os.path.join(model_dir, 'spm_pl.model')
 
     if not os.path.exists(model_path):
