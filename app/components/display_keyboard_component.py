@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 from app.components.keyboard import Keyboard, KeyboardType, ButtonManager, ButtonClickHandler
@@ -7,6 +6,7 @@ from app.scanning.strategies import BackNLevelsStrategy
 from app.widgets.stacked_widgets import PisakStackedWidget, ItemSwitchedHandler
 from app.widgets.text_display import PisakDisplay, TextEditionHandler
 from app.logging_config import get_module_logger
+from app.resource_paths import package_resource_path
 
 logger = get_module_logger(file_name="components", logger_name=__name__)
 
@@ -24,10 +24,9 @@ class KeyboardDisplayComponent(PisakColumnWidget):
         # todo: create a function that would create and setup a keyboard for each config in keyboards_config_path
 
         # Create keyboards from config files
-        config_dir = os.path.join(os.path.dirname(__file__), "..", "config_files/keyboards_layout")
-        uppercase_config = os.path.join(config_dir, "uppercase_keyboard.yml")
-        diacritics_config = os.path.join(config_dir, "diacritics_keyboard.yml")
-        numerical_config = os.path.join(config_dir, "numerical_keyboard.yml")
+        uppercase_config = package_resource_path("config_files/keyboards_layout/uppercase_keyboard.yml")
+        diacritics_config = package_resource_path("config_files/keyboards_layout/diacritics_keyboard.yml")
+        numerical_config = package_resource_path("config_files/keyboards_layout/numerical_keyboard.yml")
 
         self._uppercase = Keyboard(parent=self._keyboards,
                                    strategy=BackNLevelsStrategy(n=3))

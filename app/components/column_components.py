@@ -1,5 +1,3 @@
-import os
-
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import Qt
@@ -7,6 +5,7 @@ from app.widgets.containers import PisakColumnWidget
 from app.widgets.buttons import PisakButton, ButtonType
 from app.scanning.strategies import BackToParentStrategy
 from app.logging_config import get_module_logger
+from app.resource_paths import package_resource_path
 
 
 logger = get_module_logger(file_name="components", logger_name=__name__)
@@ -25,8 +24,6 @@ class WordColumnComponent(PisakColumnWidget):
         :param words: List of words to display as buttons
         """
         super().__init__(parent)
-        self._icons_base_path = os.path.join(os.path.dirname(__file__), "..",
-                                             "config_files/icons")
         self._add_header_image()
         self._words = words or []
         # self._column = PisakColumnWidget(parent=self._parent)
@@ -36,7 +33,7 @@ class WordColumnComponent(PisakColumnWidget):
 
     def _add_header_image(self):
         """Add the header image at the top of the column (non-scannable)"""
-        icon_path = os.path.join(self._icons_base_path, "predykcjanapis.svg")
+        icon_path = package_resource_path("config_files/icons/predykcjanapis.svg")
         header_label = QLabel(self)
         header_label.setPixmap(QtGui.QPixmap(icon_path))
         header_label.setAlignment(Qt.AlignCenter)

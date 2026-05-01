@@ -8,6 +8,7 @@ from PySide6.QtGui import QFocusEvent, QFont, Qt
 from PySide6.QtWidgets import QPushButton
 from app.scanning.scannable import PisakScannableItem
 from app.scanning.strategies import BackToParentStrategy
+from app.resource_paths import package_resource_path
 
 from app.logging_config import get_module_logger
 
@@ -111,7 +112,7 @@ class PisakButton(QPushButton, PisakScannableItem):
 
 class PisakButtonBuilder:
     def __init__(self):
-        self._icon_base_path = os.path.join(os.path.dirname(__file__), "..", "config_files/icons")
+        self._icon_base_path = package_resource_path("config_files/icons")
         self._text = ""
         self._icon = None
         self._scanning_strategy = BackToParentStrategy()
@@ -162,7 +163,7 @@ class PisakButtonBuilder:
             additional_data = button_dict['additional_data']
             # Handle KeyboardType enum conversion from string
             if isinstance(additional_data, str):
-                from pisak.components.keyboard import KeyboardType
+                from app.components.keyboard import KeyboardType
                 if hasattr(KeyboardType, additional_data):
                     additional_data = getattr(KeyboardType, additional_data)
             self.set_additional_data(additional_data)

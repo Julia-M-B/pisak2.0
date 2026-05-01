@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 def get_default_log_path() -> Path:
-    file_path = Path.home() / "pisak2.0" / "logs"
+    file_path = Path.home() / "aac_app" / "logs"
     file_path.mkdir(parents=True, exist_ok=True)
     return file_path
 
@@ -39,7 +39,7 @@ def setup_logging():
     root_logger.addHandler(console_handler)
 
     # File handler
-    file_path = get_default_log_path() / "pisak.log"
+    file_path = get_default_log_path() / "aac_app.log"
     file_handler = RotatingFileHandler(
         file_path,
         maxBytes=10**7,
@@ -50,7 +50,7 @@ def setup_logging():
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
 
-    logging.getLogger("pisak").info(
+    logging.getLogger("aac_app").info(
         "Logging configured (level=%s, file=%s)", logging.getLevelName(general_logging_level), str(file_path)
     )
 

@@ -11,7 +11,7 @@ from app.logging_config import get_module_logger
 from app.settings import DEFAULT_PREDICTION_MODEL_NAME
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
-MODEL_NAME_ENV_VAR = "PISAK_MODEL_NAME"
+MODEL_NAME_ENV_VAR = "APP_MODEL_NAME"
 
 
 class LSTMLanguageModel(nn.Module):

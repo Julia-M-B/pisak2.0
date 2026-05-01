@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run the Pisak application.")
+    parser = argparse.ArgumentParser(description="Run the experimental environment.")
     parser.add_argument(
         "--model",
         default=DEFAULT_PREDICTION_MODEL_NAME,
         help=(
-            "Prediction model filename from pisak/predictions directory "
+            "Prediction model filename from app/predictions directory "
             f"(default: {DEFAULT_PREDICTION_MODEL_NAME})."
         ),
     )
@@ -24,10 +24,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    os.environ["PISAK_MODEL_NAME"] = args.model
+    os.environ["APP_MODEL_NAME"] = args.model
     setup_logging()
-    logger.info("Running the SPELLER module with model: %s", args.model)
+    logger.info("Running the experimental environment with model: %s", args.model)
 
-    from pisak.modules.speller import run_speller
+    from app.modules.speller import run_speller
 
     run_speller.main()

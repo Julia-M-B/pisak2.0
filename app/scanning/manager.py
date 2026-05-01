@@ -138,7 +138,7 @@ class ScanningManager(EventEmitter):
         """
         # Check if activated item is a button - if so, trigger button action via event system
         # This ensures button clicks work both from mouse and scanning activation
-        from pisak.widgets.buttons import PisakButton, ButtonType
+        from app.widgets.buttons import PisakButton, ButtonType
         is_read_button = False
         if isinstance(activated_item, PisakButton):
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))

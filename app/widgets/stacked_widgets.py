@@ -111,7 +111,7 @@ class ItemSwitchedHandler:
 
             self._stacked_widget.switch_shown_item(new_item)
 
-            from pisak.scanning.scannable import PisakScannableItem
+            from app.scanning.scannable import PisakScannableItem
             
             # Check if scanning is currently active and get the old keyboard reference
             was_scanning = self._scanning_manager.is_scanning
