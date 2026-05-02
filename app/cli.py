@@ -19,12 +19,19 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
             f"(default: {DEFAULT_PREDICTION_MODEL_NAME})."
         ),
     )
+    parser.add_argument(
+        "-p",
+        "--participant",
+        default="experiment",
+        help="The name of the participant that is taking part in the experiment."
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     os.environ["APP_MODEL_NAME"] = args.model
+    os.environ["PARTICIPANT_NAME"] = args.participant
     setup_logging()
     logger.info("Running the experimental environment with model: %s", args.model)
 

@@ -9,8 +9,10 @@ Usage:
 from __future__ import annotations
 
 import logging
+import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from datetime import datetime
 
 
 def get_default_log_path() -> Path:
@@ -54,7 +56,7 @@ def setup_logging():
         "Logging configured (level=%s, file=%s)", logging.getLevelName(general_logging_level), str(file_path)
     )
 
-def get_module_logger(file_name: str, logger_name: str) -> logging.Logger:
+def get_module_logger(file_name: str, logger_name: str, experiment: bool = False) -> logging.Logger:
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.DEBUG)
 
@@ -67,11 +69,21 @@ def get_module_logger(file_name: str, logger_name: str) -> logging.Logger:
 
         formatter = logging.Formatter(
             fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+            # datefmt="%Y-%m-%d %H:%M:%S:%f",
         )
         file_handler.setFormatter(formatter)
 
         logger.addHandler(file_handler)
+
+        if experiment:
+            experiment_name = os.getenv("PARTICIPANT_NAME", "experiment").lower()
+            experiment_time = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+            experiment_file_path = get_default_log_path() / f"{experiment_name}_{experiment_time}.log"
+            experiment_handler = logging.FileHandler(experiment_file_path)
+            experiment_handler.setLevel(logging.DEBUG)
+            experiment_handler.setFormatter(formatter)
+
+            logger.addHandler(experiment_handler)
 
     return logger
 

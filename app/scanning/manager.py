@@ -14,7 +14,7 @@ from app.handlers import TimerTimeoutHandler
 
 from app.logging_config import get_module_logger
 
-logger = get_module_logger(file_name="scanning", logger_name=__name__)
+logger = get_module_logger(file_name="scanning", logger_name=__name__, experiment=True)
 
 @dataclass
 class ScanningState:
@@ -141,6 +141,7 @@ class ScanningManager(EventEmitter):
         from app.widgets.buttons import PisakButton, ButtonType
         is_read_button = False
         if isinstance(activated_item, PisakButton):
+            logger.debug(f"BUTTON CLICKED - type:{activated_item.button_type} - text:{activated_item.text}")
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
             
             # Check if this is a READ button - if so, we should stop scanning completely
