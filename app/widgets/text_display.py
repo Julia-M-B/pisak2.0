@@ -12,7 +12,7 @@ import html
 
 from app.logging_config import get_module_logger
 
-logger = get_module_logger(file_name="widgets", logger_name=__name__)
+logger = get_module_logger(file_name="widgets", logger_name=__name__, experiment=True)
 
 
 class PisakDisplay(QLabel, EventEmitter):
@@ -215,6 +215,7 @@ class PisakDisplay(QLabel, EventEmitter):
         # Save current text to history if it's not empty
         if self._text:
             self._history.append(self._text)
+            logger.debug(f"TEXT CLEARED,ButtonType.CLEAR,{self._text},")
         
         # Clear text and reset cursor
         self._text = ""
@@ -289,6 +290,8 @@ class PisakDisplay(QLabel, EventEmitter):
         :param new_word: The new word to insert (should already include trailing space if needed)
         """
         start, end = self._get_word_boundaries()
+
+        logger.debug(f"WORD REPLACED,ButtonType.WORD,{new_word},{self._text[start:end+1]}")
         
         # Check if there's a space after the word being replaced
         has_trailing_space = end < len(self._text) and self._text[end] == ' '

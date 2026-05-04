@@ -81,7 +81,7 @@ class ScanningManager(EventEmitter):
         self.emit_event(AppEvent(AppEventType.SCANNING_STARTED, item))
         self._focus_next_item()
 
-        logger.debug("Started scanning item %s", self._scanning_state.current_item)
+        logger.info("Started scanning item %s", self._scanning_state.current_item)
 
     def stop_scanning(self) -> None:
         """Stop current scanning"""
@@ -92,7 +92,7 @@ class ScanningManager(EventEmitter):
         
         # Reset iterator counter on old item before clearing it
         current_item = self._scanning_state.current_item
-        logger.debug("Stopped scanning item %s",
+        logger.info("Stopped scanning item %s",
                     self._scanning_state.current_item)
         if current_item:
             current_item.iter_counter = 0
@@ -114,6 +114,8 @@ class ScanningManager(EventEmitter):
             return
 
         current_item = self._scanning_state.current_item
+
+        logger.info(f"Item activated (switch was pressed): {current_item}")
 
         # Get the focused widget within the current item
         focused_widget = current_item.focusWidget()
@@ -141,7 +143,7 @@ class ScanningManager(EventEmitter):
         from app.widgets.buttons import PisakButton, ButtonType
         is_read_button = False
         if isinstance(activated_item, PisakButton):
-            logger.debug(f"BUTTON CLICKED - type:{activated_item.button_type} - text:{activated_item.text}")
+            logger.debug(f"BUTTON CLICKED,{activated_item.button_type},{activated_item.text},")
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
             
             # Check if this is a READ button - if so, we should stop scanning completely

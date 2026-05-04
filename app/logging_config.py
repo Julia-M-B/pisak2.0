@@ -13,7 +13,15 @@ import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from datetime import datetime
+import csv
 
+GENERAL_LOGGING_LEVEL = logging.INFO
+EXPERIMENT_LOGGING_LEVEL = logging.DEBUG
+
+
+class DebugOnlyFilter(logging.Filter):
+    def filter(self, record):
+        return record.levelno == logging.DEBUG
 
 def get_default_log_path() -> Path:
     file_path = Path.home() / "aac_app" / "logs"
@@ -27,8 +35,6 @@ def setup_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.DEBUG)
 
-    general_logging_level = logging.INFO
-
     formatter = logging.Formatter(
         fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
@@ -36,7 +42,7 @@ def setup_logging():
 
     # Console handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(general_logging_level)
+    console_handler.setLevel(GENERAL_LOGGING_LEVEL)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
 
@@ -48,12 +54,12 @@ def setup_logging():
         backupCount=3,
         encoding="utf-8",
     )
-    file_handler.setLevel(general_logging_level)
+    file_handler.setLevel(GENERAL_LOGGING_LEVEL)
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
 
     logging.getLogger("aac_app").info(
-        "Logging configured (level=%s, file=%s)", logging.getLevelName(general_logging_level), str(file_path)
+        "Logging configured (level=%s, file=%s)", logging.getLevelName(GENERAL_LOGGING_LEVEL), str(file_path)
     )
 
 def get_module_logger(file_name: str, logger_name: str, experiment: bool = False) -> logging.Logger:
@@ -65,7 +71,7 @@ def get_module_logger(file_name: str, logger_name: str, experiment: bool = False
     # Prevent adding multiple handlers if called multiple times
     if not logger.handlers:
         file_handler = logging.FileHandler(file_path)
-        file_handler.setLevel(logging.DEBUG)
+        file_handler.setLevel(GENERAL_LOGGING_LEVEL)
 
         formatter = logging.Formatter(
             fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -77,11 +83,27 @@ def get_module_logger(file_name: str, logger_name: str, experiment: bool = False
 
         if experiment:
             experiment_name = os.getenv("PARTICIPANT_NAME", "experiment").lower()
-            experiment_time = str(datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
-            experiment_file_path = get_default_log_path() / f"{experiment_name}_{experiment_time}.log"
-            experiment_handler = logging.FileHandler(experiment_file_path)
-            experiment_handler.setLevel(logging.DEBUG)
-            experiment_handler.setFormatter(formatter)
+            experiment_time = str(datetime.now().strftime("%Y-%m-%d_%H-%M"))
+            experiment_file_path = get_default_log_path() / f"{experiment_name}_{experiment_time}.csv"
+
+            csv_header = ["Date", "Time", "Level", "Module", "Action", "Type", "Text", "Additional information"]
+            if (not experiment_file_path.exists()) or experiment_file_path.stat().st_size == 0:
+                with open(experiment_file_path, "w", newline="", encoding="utf-8") as csv_log:
+                    csv_writer = csv.writer(csv_log)
+                    csv_writer.writerow(csv_header)
+
+            experiment_handler = logging.FileHandler(experiment_file_path, encoding="utf-8")
+            experiment_handler.setLevel(EXPERIMENT_LOGGING_LEVEL)
+
+            csv_formatter = logging.Formatter(
+                fmt="%(asctime)s.%(msecs)03d,%(levelname)s,%(name)s,%(message)s",
+                datefmt="%Y.%m.%d,%H:%M:%S"
+            )
+
+            experiment_filter = DebugOnlyFilter()
+
+            experiment_handler.setFormatter(csv_formatter)
+            experiment_handler.addFilter(experiment_filter)
 
             logger.addHandler(experiment_handler)
 

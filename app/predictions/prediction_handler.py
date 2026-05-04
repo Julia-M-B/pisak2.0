@@ -11,7 +11,7 @@ from app.emitters import EventEmitter
 
 from app.logging_config import get_module_logger
 
-logger = get_module_logger(file_name="predictions", logger_name=__name__)
+logger = get_module_logger(file_name="predictions", logger_name=__name__, experiment=True)
 
 
 class ThreadSafeEventAdapter(QObject, EventEmitter):
@@ -47,6 +47,8 @@ class ThreadSafeEventAdapter(QObject, EventEmitter):
         """
         # Now we're in the main thread, safe to emit events that update UI
         event = AppEvent(AppEventType.PREDICTIONS_READY, predictions)
+        predictions_str = "  ".join(predictions)
+        logger.debug(f"GENERATED PREDICTIONS,,,{predictions_str}")
         self.emit_event(event)
 
 
