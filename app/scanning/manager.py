@@ -143,7 +143,8 @@ class ScanningManager(EventEmitter):
         from app.widgets.buttons import PisakButton, ButtonType
         is_read_button = False
         if isinstance(activated_item, PisakButton):
-            logger.debug(f"BUTTON CLICKED,{activated_item.button_type},{activated_item.text},")
+            button_text = activated_item.text if activated_item.text else activated_item.additional_data
+            logger.debug(f"BUTTON CLICKED,{activated_item.button_type},{button_text},")
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
             
             # Check if this is a READ button - if so, we should stop scanning completely

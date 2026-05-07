@@ -23,8 +23,11 @@ class DebugOnlyFilter(logging.Filter):
     def filter(self, record):
         return record.levelno == logging.DEBUG
 
-def get_default_log_path() -> Path:
-    file_path = Path.home() / "aac_app" / "logs"
+def get_default_log_path(is_experiment: bool = False) -> Path:
+    if is_experiment:
+        file_path = Path.home() / "aac_app" / "experiment"
+    else:
+        file_path = Path.home() / "aac_app" / "logs"
     file_path.mkdir(parents=True, exist_ok=True)
     return file_path
 
@@ -84,7 +87,7 @@ def get_module_logger(file_name: str, logger_name: str, experiment: bool = False
         if experiment:
             experiment_name = os.getenv("PARTICIPANT_NAME", "experiment").lower()
             experiment_time = str(datetime.now().strftime("%Y-%m-%d_%H-%M"))
-            experiment_file_path = get_default_log_path() / f"{experiment_name}_{experiment_time}.csv"
+            experiment_file_path = get_default_log_path(is_experiment=True) / f"{experiment_name}_{experiment_time}.csv"
 
             csv_header = ["Date", "Time", "Level", "Module", "Action", "Type", "Text", "Additional information"]
             if (not experiment_file_path.exists()) or experiment_file_path.stat().st_size == 0:

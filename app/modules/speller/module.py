@@ -15,7 +15,6 @@ Funkcjonalnosci:
 """
 
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt
 
 from app.components.display_keyboard_component import KeyboardDisplayComponent
 from app.components.column_components import WordColumnComponent
@@ -26,6 +25,11 @@ from app.adapters import KeyPressAdapter, MousePressAdapter
 from app.events import AppEvent, AppEventType
 from app.widgets.containers import PisakRowWidget
 from app.predictions.prediction_handler import PredictionHandler
+
+from app.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="aac_app", logger_name=__name__, experiment=True)
+
 
 class PisakSpellerModule(PisakBaseModule):
     """
@@ -92,6 +96,10 @@ class PisakSpellerModule(PisakBaseModule):
     
     def closeEvent(self, event):
         """Clean up resources when module is closed"""
+
+        current_text = self._action_button_handler.text_display.text
+        logger.debug(f"EXITING APP,ButtonType.EXIT,{current_text},")
+
         # Stop the prediction service thread
         if hasattr(self, '_prediction_handler'):
             self._prediction_handler.stop()
@@ -103,12 +111,15 @@ class ScanningSwitchHandler:
     def __init__(self, scanning_manager, main_scannable_item):
         self._scanning_manager = scanning_manager
         self._main_scannable_item = main_scannable_item
+        self._switch_pressed_counter = 0
     
     def handle_event(self, event: AppEvent) -> None:
         """Handle key press events - only process key "1" """
         if event.type != AppEventType.SWITCH_PRESSED:
             return
-        
+
+        self._switch_pressed_counter += 1
+        logger.debug(f"SWITCH PRESSED,,,{self._switch_pressed_counter}")
         # key_data = event.data
         # if not isinstance(key_data, dict):
         #     return
