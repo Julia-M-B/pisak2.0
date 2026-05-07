@@ -14,6 +14,8 @@ Funkcjonalnosci:
 - mozliwosc powrotu do menu glownego
 """
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QWidget
 
 from app.components.display_keyboard_component import KeyboardDisplayComponent
@@ -21,7 +23,7 @@ from app.components.column_components import WordColumnComponent
 from app.components.action_buttons_column_component import ActionButtonsColumnComponent, ActionButtonsHandler
 from app.components.keyboard import ButtonManager, ButtonClickHandler
 from app.modules.base_module import PisakBaseModule
-from app.adapters import KeyPressAdapter, MousePressAdapter
+from app.adapters import KeyPressAdapter
 from app.events import AppEvent, AppEventType
 from app.widgets.containers import PisakRowWidget
 from app.predictions.prediction_handler import PredictionHandler
@@ -88,9 +90,12 @@ class PisakSpellerModule(PisakBaseModule):
         self._keyboard_component.display.subscribe(self._prediction_handler)
 
         # Set up scanning to control the Main Row (switching between WordColumn and RightColumn)
-        # self._key_adapter = KeyPressAdapter(self, parent=self)
-        self._mouse_adapter = MousePressAdapter(self, parent=self)
-        self._mouse_adapter.subscribe(ScanningSwitchHandler(self._scanning_manager, self.centralWidget()))
+        self._switch_handler = ScanningSwitchHandler(self._scanning_manager, self.centralWidget())
+        self._key_adapter = KeyPressAdapter(self, parent=self)
+        self._key_adapter.subscribe(self._switch_handler)
+        # Fallback shortcut so SPACE works even when focus is on child widgets (e.g. buttons).
+        self._space_shortcut = QShortcut(QKeySequence(Qt.Key_Space), self)
+        self._space_shortcut.activated.connect(self._on_space_shortcut)
 
         self.init_ui()
     
@@ -105,8 +110,13 @@ class PisakSpellerModule(PisakBaseModule):
             self._prediction_handler.stop()
         super().closeEvent(event)
 
+    def _on_space_shortcut(self):
+        self._switch_handler.handle_event(
+            AppEvent(AppEventType.SWITCH_PRESSED, {"key": Qt.Key_Space})
+        )
+
 class ScanningSwitchHandler:
-    """Handler for key "1" to control scanning"""
+    """Handler for SPACE key to control scanning."""
     
     def __init__(self, scanning_manager, main_scannable_item):
         self._scanning_manager = scanning_manager
@@ -114,26 +124,19 @@ class ScanningSwitchHandler:
         self._switch_pressed_counter = 0
     
     def handle_event(self, event: AppEvent) -> None:
-        """Handle key press events - only process key "1" """
+        """Handle key press events - only process SPACE."""
         if event.type != AppEventType.SWITCH_PRESSED:
+            return
+
+        key_data = event.data
+        if not isinstance(key_data, dict):
+            return
+
+        if key_data.get("key") != Qt.Key_Space:
             return
 
         self._switch_pressed_counter += 1
         logger.debug(f"SWITCH PRESSED,,,{self._switch_pressed_counter}")
-        # key_data = event.data
-        # if not isinstance(key_data, dict):
-        #     return
-        #
-        # key = key_data.get('key')
-        # text = key_data.get('text', '')
-        # # Check for key "1" - can be Qt.Key_1, ASCII code 0x31, or text '1'
-        # # In PySide6, key codes might vary, so check multiple possibilities
-        # is_key_1 = (text == '1' or
-        #            key == 0x31 or  # ASCII code for '1'
-        #            key == getattr(Qt, 'Key_1', None) or
-        #            key == getattr(Qt.Key, 'Key_1', None))
-        #
-        # if is_key_1:
         if not self._scanning_manager.is_scanning:
             # Start scanning from the main row (word column + keyboards)
             scannable_items = getattr(self._main_scannable_item, 'scannable_items', [])
