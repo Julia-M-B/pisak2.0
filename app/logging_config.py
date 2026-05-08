@@ -86,8 +86,9 @@ def get_module_logger(file_name: str, logger_name: str, experiment: bool = False
 
         if experiment:
             experiment_name = os.getenv("PARTICIPANT_NAME", "experiment").lower()
+            experiment_model = os.getenv("APP_MODEL_NAME", "unknown_model")
             experiment_time = str(datetime.now().strftime("%Y-%m-%d_%H-%M"))
-            experiment_file_path = get_default_log_path(is_experiment=True) / f"{experiment_name}_{experiment_time}.csv"
+            experiment_file_path = get_default_log_path(is_experiment=True) / f"{experiment_name}_{experiment_model}_{experiment_time}.csv"
 
             csv_header = ["Date", "Time", "Level", "Module", "Action", "Type", "Text", "Additional information"]
             if (not experiment_file_path.exists()) or experiment_file_path.stat().st_size == 0:
