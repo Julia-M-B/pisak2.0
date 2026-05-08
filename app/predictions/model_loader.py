@@ -218,6 +218,7 @@ def load_model_and_tokenizer(
 
     if model_name is None:
         model_name = os.getenv(MODEL_NAME_ENV_VAR, DEFAULT_PREDICTION_MODEL_NAME)
+        print("Running application with model:", model_name)
 
     model_path = os.path.join(model_dir, model_name)
     tokenizer_path = os.path.join(model_dir, 'spm_pl.model')

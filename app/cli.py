@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the experimental environment.")
     parser.add_argument(
+        "-m",
         "--model",
         default=DEFAULT_PREDICTION_MODEL_NAME,
         help=(
