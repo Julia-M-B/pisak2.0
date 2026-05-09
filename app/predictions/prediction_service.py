@@ -2,12 +2,13 @@
 Threaded prediction service that generates word predictions without blocking the main UI thread.
 """
 import threading
+import os
 from typing import Callable, Optional
 from queue import Queue
 
 from app.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
 from app.logging_config import get_module_logger
-from torch import device
+
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
 
@@ -20,7 +21,8 @@ class PredictionService:
     """
     
     def __init__(self, n_words: int = N_WORDS, use_real_model: bool = True, 
-                 model_dir: str = None, beam_width: int = 25, max_word_length: int = 10):
+                 model_dir: str = None, beam_width: int = 25, max_word_length: int = 10,
+                 dictionary_csv: str | None = None, alpha: float = 0.2, seq_len: int = 128):
         """
         Initialize the prediction service.
         
@@ -41,10 +43,18 @@ class PredictionService:
         # Initialize beam searcher if using real model
         if self._use_real_model:
             try:
+                if dictionary_csv is None:
+                    predictions_dir = model_dir or os.path.dirname(os.path.abspath(__file__))
+                    dictionary_csv = os.path.join(
+                        predictions_dir, "unigrams200k.csv"
+                    )
                 self._beam_searcher = create_beam_searcher(
                     model_dir=model_dir,
-                    beam_width=beam_width,
-                    max_word_length=max_word_length
+                    beam_width=beam_width ,
+                    max_word_length=max_word_length,
+                    alpha=alpha,
+                    seq_len=seq_len,
+                    dictionary_csv=dictionary_csv,
                 )
             except Exception as e:
                 logger.debug("Warning: Could not load real model: %s", e)
