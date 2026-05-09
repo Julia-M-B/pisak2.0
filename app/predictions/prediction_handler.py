@@ -58,7 +58,12 @@ class PredictionHandler:
     Uses thread-safe event adapter to bridge worker thread and UI thread.
     """
     
-    def __init__(self, word_column: WordColumnComponent, n_words: int = 10):
+    def __init__(
+        self,
+        word_column: WordColumnComponent,
+        n_words: int = 10,
+        base_words: list[str] | None = None,
+    ):
         """
         Initialize the prediction handler.
         
@@ -67,6 +72,10 @@ class PredictionHandler:
         """
         self._word_column = word_column
         self._prediction_service = PredictionService(n_words=n_words)
+        self._base_words = (base_words or [])[:n_words]
+        if len(self._base_words) < n_words:
+            self._base_words.extend([""] * (n_words - len(self._base_words)))
+        self._latest_request_id = 0
         
         # Create thread-safe adapter for predictions
         self._prediction_adapter = ThreadSafeEventAdapter()
@@ -91,17 +100,31 @@ class PredictionHandler:
             if isinstance(data, dict):
                 text = data.get('text', '')
                 cursor_position = data.get('cursor_position', 0)
+
+                if not text:
+                    # Reset word column immediately after CLEAR (or any full erase).
+                    # Invalidate any in-flight async prediction responses.
+                    self._latest_request_id += 1
+                    self._word_column.update_words(self._base_words)
+                    return
                 
                 # Request predictions (non-blocking)
-                self._prediction_service.request_predictions(text, cursor_position)
+                self._latest_request_id = self._prediction_service.request_predictions(
+                    text,
+                    cursor_position,
+                )
     
-    def _on_predictions_ready(self, predictions: list[str]):
+    def _on_predictions_ready(self, predictions: list[str], request_id: int):
         """
         Callback called by prediction service (in worker thread).
         Uses thread-safe adapter to communicate with UI thread.
         
         :param predictions: List of predicted words
         """
+        if request_id != self._latest_request_id:
+            # Ignore stale async responses (e.g., generated before CLEAR).
+            return
+
         # Use adapter to safely switch to main thread and emit event
         self._prediction_adapter.emit_from_worker_thread(predictions)
     

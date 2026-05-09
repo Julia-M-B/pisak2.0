@@ -30,4 +30,7 @@ include = ["app*"]
 app = [
     "config_files/icons/*.svg",
     "config_files/keyboards_layout/*.yml",
+    "predictions/*.csv",
+    "predictions/*.model",
+    "predictions/*.pt",
 ]

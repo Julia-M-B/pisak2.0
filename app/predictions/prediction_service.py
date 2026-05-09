@@ -37,8 +37,9 @@ class PredictionService:
         self._request_queue = Queue()
         self._worker_thread: Optional[threading.Thread] = None
         self._running = False
-        self._callback: Optional[Callable[[list[str]], None]] = None
+        self._callback: Optional[Callable[[list[str], int], None]] = None
         self._beam_searcher: Optional[WordPredictionBeamSearch] = None
+        self._request_counter = 0
         
         # Initialize beam searcher if using real model
         if self._use_real_model:
@@ -48,6 +49,12 @@ class PredictionService:
                     dictionary_csv = os.path.join(
                         predictions_dir, "unigrams200k.csv"
                     )
+                csv_exists = os.path.exists(dictionary_csv)
+                logger.info(
+                    "Prediction dictionary CSV path: %s (exists=%s)",
+                    dictionary_csv,
+                    csv_exists,
+                )
                 self._beam_searcher = create_beam_searcher(
                     model_dir=model_dir,
                     beam_width=beam_width ,
@@ -56,6 +63,17 @@ class PredictionService:
                     seq_len=seq_len,
                     dictionary_csv=dictionary_csv,
                 )
+                dictionary = getattr(self._beam_searcher, "dictionary", None)
+                if dictionary is not None:
+                    logger.info(
+                        "Prediction dictionary loaded: %s words (top_fallback=%s).",
+                        dictionary.word_count,
+                        len(dictionary.top_n_words),
+                    )
+                else:
+                    logger.warning(
+                        "Prediction dictionary is not loaded; validation is disabled."
+                    )
             except Exception as e:
                 logger.debug("Warning: Could not load real model: %s", e)
                 logger.debug("Falling back to dummy predictions.")
@@ -77,7 +95,7 @@ class PredictionService:
             self._request_queue.put(None)  # Signal to stop
             self._worker_thread.join(timeout=1.0)
     
-    def set_callback(self, callback: Callable[[list[str]], None]):
+    def set_callback(self, callback: Callable[[list[str], int], None]):
         """
         Set the callback function that will be called with predictions.
         
@@ -102,11 +120,16 @@ class PredictionService:
             except:
                 break
         
+        self._request_counter += 1
+        request_id = self._request_counter
+
         # Put the latest request in queue (non-blocking)
         self._request_queue.put({
+            'request_id': request_id,
             'text': text,
             'cursor_position': cursor_position
         })
+        return request_id
     
     def _worker(self):
         """Worker thread that processes prediction requests"""
@@ -126,7 +149,7 @@ class PredictionService:
                 
                 # Deliver results via callback (in worker thread)
                 if self._callback:
-                    self._callback(predictions)
+                    self._callback(predictions, request['request_id'])
                     
             except Exception as e:
                 # Queue.get timeout or other errors - just continue
@@ -141,6 +164,8 @@ class PredictionService:
         :param cursor_position: Current cursor position
         :return: List of predicted words
         """
+        predictions = [""] * self._n_words
+
         if self._use_real_model and self._beam_searcher is not None:
             # Use real model with beam search
             try:

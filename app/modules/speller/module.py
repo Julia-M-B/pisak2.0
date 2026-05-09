@@ -84,7 +84,8 @@ class PisakSpellerModule(PisakBaseModule):
         # Connect text display changes to word column updates via threaded prediction service
         self._prediction_handler = PredictionHandler(
             word_column=self._word_column,
-            n_words=len(words)
+            n_words=len(words),
+            base_words=words,
         )
         # Subscribe prediction handler to text display events
         self._keyboard_component.display.subscribe(self._prediction_handler)

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from app.emitters import EventEmitter
 from app.events import AppEvent, AppEventType
 from app.scanning.scannable import PisakScannableItem
-from app.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER
+from app.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER, SCAN_START_DELAY
 from app.adapters import TimerAdapter
 from app.handlers import TimerTimeoutHandler
 
@@ -56,8 +56,11 @@ class ScanningManager(EventEmitter):
         super().__init__()
         self._timer = TimerAdapter(int(SCAN_HIGHLIGHT_TIME * 1000))
         self._timer.subscribe(TimerTimeoutHandler(scanning_manager=self))
+        self._start_delay_timer = TimerAdapter(int(SCAN_START_DELAY * 1000))
+        self._start_delay_timer.subscribe(self._DelayedStartHandler(self))
 
         self._scanning_state = ScanningState()
+        self._pending_start_token = 0
 
     def start_scanning(self, item: PisakScannableItem) -> None:
         """Start scanning a scannable item"""
@@ -68,18 +71,21 @@ class ScanningManager(EventEmitter):
         # Ensure timer is stopped before starting new scan
         if self._timer.is_active():
             self._timer.stop()
+        if self._start_delay_timer.is_active():
+            self._start_delay_timer.stop()
         
         # Set new scanning state (this increments scan_id)
         self._scanning_state.set_is_scanning(True).set_current_item(item).set_loops_counter(0)
 
         iter(item)
 
-        # Start timer
-        self._timer.start()
+        # Delay first highlight to make choosing first child item easier.
+        self._pending_start_token += 1
+        pending_token = self._pending_start_token
 
         # Emit event
         self.emit_event(AppEvent(AppEventType.SCANNING_STARTED, item))
-        self._focus_next_item()
+        self._start_delay_timer.start()
 
         logger.info("Started scanning item %s", self._scanning_state.current_item)
 
@@ -89,6 +95,9 @@ class ScanningManager(EventEmitter):
             return
 
         self._timer.stop()
+        if self._start_delay_timer.is_active():
+            self._start_delay_timer.stop()
+        self._pending_start_token += 1
         
         # Reset iterator counter on old item before clearing it
         current_item = self._scanning_state.current_item
@@ -220,6 +229,22 @@ class ScanningManager(EventEmitter):
 
         self._focus_next_item()
 
+    def _on_start_delay_timeout(self, pending_token: int):
+        """
+        Start scanning ticks and first focus after configured startup delay.
+        """
+        # Delay timer should act like one-shot.
+        if self._start_delay_timer.is_active():
+            self._start_delay_timer.stop()
+
+        if pending_token != self._pending_start_token:
+            return
+        if not self._scanning_state.is_scanning or not self._scanning_state.current_item:
+            return
+
+        self._timer.start()
+        self._focus_next_item()
+
     def _focus_next_item(self):
         """Focus the next item in the scanning sequence"""
         if not self._scanning_state.is_scanning or not self._scanning_state.current_item:
@@ -258,4 +283,15 @@ class ScanningManager(EventEmitter):
     def current_item(self) -> Optional[PisakScannableItem]:
         """Get currently scanned item"""
         return self._scanning_state.current_item
+
+    class _DelayedStartHandler:
+        """Bridges delayed timer timeout to manager callback."""
+
+        def __init__(self, scanning_manager: "ScanningManager"):
+            self._scanning_manager = scanning_manager
+
+        def handle_event(self, event: AppEvent) -> None:
+            if event.type == AppEventType.TIMER_TIMEOUT:
+                token = self._scanning_manager._pending_start_token
+                self._scanning_manager._on_start_delay_timeout(token)
 
