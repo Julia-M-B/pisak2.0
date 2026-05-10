@@ -58,41 +58,32 @@ class PredictionHandler:
     Uses thread-safe event adapter to bridge worker thread and UI thread.
     """
     
-    def __init__(
-        self,
-        word_column: WordColumnComponent,
-        n_words: int = 10,
-        base_words: list[str] | None = None,
-    ):
+    def __init__(self, word_column: WordColumnComponent, n_words: int = 10):
         """
         Initialize the prediction handler.
-        
+
         :param word_column: The WordColumnComponent to update with predictions
         :param n_words: Number of words to predict
         """
         self._word_column = word_column
         self._prediction_service = PredictionService(n_words=n_words)
-        self._base_words = (base_words or [])[:n_words]
-        if len(self._base_words) < n_words:
-            self._base_words.extend([""] * (n_words - len(self._base_words)))
-        self._latest_request_id = 0
-        
+
         # Create thread-safe adapter for predictions
         self._prediction_adapter = ThreadSafeEventAdapter()
-        
+
         # Subscribe word column updater to adapter events
         self._prediction_adapter.subscribe(WordColumnUpdater(word_column))
-        
+
         # Set callback for prediction service
         self._prediction_service.set_callback(self._on_predictions_ready)
-        
+
         # Start the prediction service thread
         self._prediction_service.start()
-    
+
     def handle_event(self, event: AppEvent) -> None:
         """
         Handle TEXT_CHANGED events from PisakDisplay.
-        
+
         :param event: The event to handle
         """
         if event.type == AppEventType.TEXT_CHANGED:
@@ -101,33 +92,19 @@ class PredictionHandler:
                 text = data.get('text', '')
                 cursor_position = data.get('cursor_position', 0)
 
-                if not text:
-                    # Reset word column immediately after CLEAR (or any full erase).
-                    # Invalidate any in-flight async prediction responses.
-                    self._latest_request_id += 1
-                    self._word_column.update_words(self._base_words)
-                    return
-                
                 # Request predictions (non-blocking)
-                self._latest_request_id = self._prediction_service.request_predictions(
-                    text,
-                    cursor_position,
-                )
-    
-    def _on_predictions_ready(self, predictions: list[str], request_id: int):
+                self._prediction_service.request_predictions(text, cursor_position)
+
+    def _on_predictions_ready(self, predictions: list[str]):
         """
         Callback called by prediction service (in worker thread).
         Uses thread-safe adapter to communicate with UI thread.
-        
+
         :param predictions: List of predicted words
         """
-        if request_id != self._latest_request_id:
-            # Ignore stale async responses (e.g., generated before CLEAR).
-            return
-
         # Use adapter to safely switch to main thread and emit event
         self._prediction_adapter.emit_from_worker_thread(predictions)
-    
+
     def stop(self):
         """Stop the prediction service"""
         self._prediction_service.stop()
@@ -138,19 +115,17 @@ class WordColumnUpdater:
     Handler that updates word column when predictions are ready.
     This runs in the main UI thread (ensured by ThreadSafeEventAdapter).
     """
-    
+
     def __init__(self, word_column: WordColumnComponent):
         self._word_column = word_column
-    
+
     def handle_event(self, event: AppEvent) -> None:
         """
         Handle PREDICTIONS_READY events.
-        
+
         :param event: The event to handle
         """
         if event.type == AppEventType.PREDICTIONS_READY:
             predictions = event.data
             if isinstance(predictions, list):
                 self._word_column.update_words(predictions)
-
-

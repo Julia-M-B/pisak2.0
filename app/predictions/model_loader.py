@@ -5,7 +5,7 @@ import os
 import torch
 import torch.nn as nn
 import sentencepiece as spm
-from typing import List, Any, Optional, Tuple
+from typing import List
 
 from app.logging_config import get_module_logger
 from app.settings import DEFAULT_PREDICTION_MODEL_NAME
@@ -45,11 +45,10 @@ class LSTMLanguageModel(nn.Module):
 
 class LSTMModelWrapper:
     """
-    Wrapper for LSTM model that provides predict() and predict_with_state()
-    methods for use with the optimised beam search.
+    Wrapper for LSTM model that provides predict() method for beam search.
     """
-    
-    def __init__(self, model_path: str, device: str = None, seq_len: int = 128):
+
+    def __init__(self, model_path: str, device: str = None, seq_len: int = 256):
         """
         Initialize the model wrapper.
 
@@ -95,6 +94,7 @@ class LSTMModelWrapper:
             n_layers=n_layers
         )
 
+
         self.model.load_state_dict(state_dict, strict=True)
         self.model.to(self.device)
         self.model.eval()
@@ -134,58 +134,6 @@ class LSTMModelWrapper:
 
             # Convert to list
             return probs.cpu().tolist()
-
-    def predict_with_state(
-            self,
-            new_tokens: List[int],
-            hidden: Optional[Any],
-    ) -> Tuple[List[float], Any]:
-        """
-        Run the model on `new_tokens` starting from `hidden`.
-
-        This is the key method for hidden-state prefix caching in the beam
-        search.  Instead of re-processing the full context on every call,
-        the caller passes in the cached hidden state from the previous step
-        and only the new tokens are processed.
-
-        Parameters
-        ----------
-        new_tokens : tokens to process in this call.
-                     When priming the context, this is the full context
-                     token list and hidden=None.
-                     During beam expansion, this is just the beam's token(s)
-                     appended since the last cache hit.
-        hidden     : LSTM hidden state (h_n, c_n) from a previous call, or
-                     None to start from scratch.
-
-        Returns
-        -------
-        probs      : List[float] of length vocab_size — next-token distribution
-        new_hidden : updated LSTM hidden state to cache for future calls
-        """
-        if not new_tokens:
-            # Nothing to process — return uniform distribution and pass
-            # hidden through unchanged.  This happens when the beam search
-            # asks for predictions at the context boundary.
-            if hidden is None:
-                return [1.0 / self.vocab_size] * self.vocab_size, None
-            # Re-run last step to get logits (hidden already advanced past it)
-            # Caller should avoid this case; handled defensively here.
-            return [1.0 / self.vocab_size] * self.vocab_size, hidden
-
-        # Trim so total seen tokens never exceed seq_len.
-        # (hidden already encodes everything before new_tokens, so we only
-        #  need to cap new_tokens itself in the extreme case of a very long
-        #  beam path — rare in practice with max_word_length <= 15.)
-        new_tokens = new_tokens[-self.seq_len:]
-        input_ids = torch.LongTensor([new_tokens]).to(self.device)
-
-        with torch.no_grad():
-            logits, new_hidden = self.model(input_ids, hidden)
-            # logits: (1, len(new_tokens), vocab_size)
-            # Read probabilities from the last token position
-            probs = torch.softmax(logits[0, -1, :], dim=0)
-            return probs.cpu().tolist(), new_hidden
 
 
 class SentencePieceTokenizer:
@@ -265,7 +213,6 @@ def load_model_and_tokenizer(
 
     if model_name is None:
         model_name = os.getenv(MODEL_NAME_ENV_VAR, DEFAULT_PREDICTION_MODEL_NAME)
-        print("Running application with model:", model_name)
 
     model_path = os.path.join(model_dir, model_name)
     tokenizer_path = os.path.join(model_dir, 'spm_pl.model')

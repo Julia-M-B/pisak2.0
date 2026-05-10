@@ -36,7 +36,7 @@ logger = get_module_logger(file_name="aac_app", logger_name=__name__, experiment
 class PisakSpellerModule(PisakBaseModule):
     """
     Podstawa modulu jest PisakSpellerModule, ktory dziedziczy po PisakBaseModule.
-    
+
     This module provides a virtual keyboard interface for text input with word prediction.
     The keyboard emits events that are handled by the text display widget.
     Real keyboard input is ignored - only virtual keyboard events are processed.
@@ -53,7 +53,7 @@ class PisakSpellerModule(PisakBaseModule):
         words = ["CZEŚĆ", "CZY", "JAK", "JESTEM", "NIE"]
         self._word_column = WordColumnComponent(self.centralWidget(), words=words)
         self._keyboard_component = KeyboardDisplayComponent(self.centralWidget(), scanning_manager=self._scanning_manager)
-        
+
         # Create Action Buttons Column - must be created after keyboard_component and word_column
         self._action_column = ActionButtonsColumnComponent(parent=self.centralWidget())
         self._action_button_manager = ButtonManager()
@@ -73,7 +73,7 @@ class PisakSpellerModule(PisakBaseModule):
         self.centralWidget().add_item(self._word_column)
         self.centralWidget().add_item(self._keyboard_component)
         self.centralWidget().set_layout()
-        
+
         # Apply Stretches: Action Column (1/5) | Word Column (1/5) | Keyboard (3/5)
         # To achieve 1/5 width for action column: use ratio 1:1:3 for a total of 5 parts
         self.centralWidget().layout.setStretch(0, 1)  # Action column: 1/5
@@ -84,8 +84,7 @@ class PisakSpellerModule(PisakBaseModule):
         # Connect text display changes to word column updates via threaded prediction service
         self._prediction_handler = PredictionHandler(
             word_column=self._word_column,
-            n_words=len(words),
-            base_words=words,
+            n_words=len(words)
         )
         # Subscribe prediction handler to text display events
         self._keyboard_component.display.subscribe(self._prediction_handler)
@@ -99,7 +98,7 @@ class PisakSpellerModule(PisakBaseModule):
         self._space_shortcut.activated.connect(self._on_space_shortcut)
 
         self.init_ui()
-    
+
     def closeEvent(self, event):
         """Clean up resources when module is closed"""
 
@@ -118,12 +117,12 @@ class PisakSpellerModule(PisakBaseModule):
 
 class ScanningSwitchHandler:
     """Handler for SPACE key to control scanning."""
-    
+
     def __init__(self, scanning_manager, main_scannable_item):
         self._scanning_manager = scanning_manager
         self._main_scannable_item = main_scannable_item
         self._switch_pressed_counter = 0
-    
+
     def handle_event(self, event: AppEvent) -> None:
         """Handle key press events - only process SPACE."""
         if event.type != AppEventType.SWITCH_PRESSED:
