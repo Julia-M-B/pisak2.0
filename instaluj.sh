@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Installation script for Pisak application
+# Installation script for the experimental environment simulating AAC applications.
 # This script clones the repository (or updates existing one),
 # installs dependencies, and creates a desktop icon
 
@@ -13,73 +13,71 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 
-GITHUB_REPO_URL="https://github.com/Julia-M-B/pisak2.0.git"
-INSTALL_DIR="$HOME/pisak2.0"
-APP_NAME="Pisak 2.0"
-DESKTOP_FILE_NAME="pisak2.desktop"
+GITHUB_REPO_URL="https://github.com/Julia-M-B/master_thesis_app.git"
+INSTALL_DIR="$HOME/aac_experiment"
+APP_NAME="AAC_app"
+DESKTOP_FILE_NAME="aac_app.desktop"
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Skrypt instalacyjny PISAKa${NC}"
+echo -e "${GREEN}Installation script for the experimental environment simulating AAC application${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
 # Check if running on Linux
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
-    echo -e "${RED}Błąd: Ten skrypt stworzony jest dla systemów typu Linux.${NC}"
+    echo -e "${RED}Error: This script is meant to be run on Linux.${NC}"
     exit 1
 fi
 
 # Check for required commands
-echo -e "${YELLOW}Sprawdzenie, czy są zainstalowane wymagane paczki ...${NC}"
+echo -e "${YELLOW}Checking whether the required tools are installed ...${NC}"
 for cmd in git python3 pip3; do
     if ! command -v $cmd &> /dev/null; then
-        echo -e "${RED}Błąd: $cmd nie jest zainstalowany. Zainstaluj odpowiednią paczkę przed ponownym uruchomieniem skryptu.${NC}"
+        echo -e "${RED}Error: $cmd is not installed. Install required tools before running the script.${NC}"
         exit 1
     fi
 done
 
-echo -e "${GREEN}✓ Wymagane paczki są zainstalowane${NC}"
+echo -e "${GREEN}✓ All required tools are installed.${NC}"
 echo ""
-
-# todo: add python version checking with the possibility of installation newer version of python
 
 # Clone or update repository
 if [ -d "$INSTALL_DIR" ]; then
-    echo -e "${YELLOW}Folder $INSTALL_DIR już istnieje. Ściągam najnowszą wersję ...${NC}"
+    echo -e "${YELLOW}Dictionary $INSTALL_DIR is already existing. Updating the latest version of the repository ...${NC}"
     cd "$INSTALL_DIR"
     if [ -d ".git" ]; then
         git pull
     else
-        echo -e "${RED}Błąd: $INSTALL_DIR już istnieje, ale nie jest połączony z repozytorium git.${NC}"
-        echo -e "${YELLOW}Usuń istniejący folder przed ponownym uruchomieniem skryptu.${NC}"
+        echo -e "${RED}Error: $INSTALL_DIR is already existing but it is not connected to any git repository.${NC}"
+        echo -e "${YELLOW}Delete existing repository before running the script.${NC}"
         exit 1
     fi
 else
-    echo -e "${YELLOW}Klonuję repozytorium $GITHUB_REPO_URL ...${NC}"
+    echo -e "${YELLOW}Cloning the repository $GITHUB_REPO_URL ...${NC}"
     git clone "$GITHUB_REPO_URL" "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 
-# Navigate to pisak2.0 directory
+# Navigate to aac_experiment directory
 cd
-if [ -d "pisak2.0" ]; then
-    cd pisak2.0
+if [ -d "aac_experiment" ]; then
+    cd aac_experiment
 else
-    echo -e "${YELLOW}Ostrzeżenie: folder 'pisak2.0' nie został znaleziony.${NC}"
+    echo -e "${YELLOW}Warning: The 'aac_experiment' dictionary wasn't found.${NC}"
 fi
 
 # Create virtual environment
-echo -e "${YELLOW}Tworzę wirtualne środowisko ...${NC}"
+echo -e "${YELLOW}Creating virtual environment ...${NC}"
 if [ -d "venv" ]; then
-    echo -e "${YELLOW}Wirtualne środowisko już istnieje.${NC}"
+    echo -e "${YELLOW}Found existing virtual environment.${NC}"
 else
     python3 -m venv venv
 fi
-echo -e "${GREEN}✓ Wirtualne środowisko zostało pomyślnie stworzone.${NC}"
+echo -e "${GREEN}✓ Virtual environment was successfully created.${NC}"
 echo ""
 
 # Activate virtual environment and install Python dependencies
-echo -e "${YELLOW}Instaluję potrzebne biblioteki ...${NC}"
+echo -e "${YELLOW}Installing required packages ...${NC}"
 source venv/bin/activate
 
 # Upgrade pip
@@ -88,9 +86,9 @@ pip install --upgrade pip
 # Install requirements
 if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
-    echo -e "${GREEN}✓ Wszystkie biblioteki zostały poprawnie zainstalowane.${NC}"
+    echo -e "${GREEN}✓ All required packages were successfully installed.${NC}"
 else
-    echo -e "${RED}Błąd: nie znaleziono pliku z wymaganymi bibliotekami!${NC}"
+    echo -e "${RED}error: The 'requirements.txt' file wasn't found!${NC}"
     exit 1
 fi
 echo ""
@@ -99,14 +97,14 @@ echo ""
 SCRIPT_DIR=$(pwd)
 RUN_PATH="$SCRIPT_DIR/run.py"
 
-# Verify test_speller.py exists
+# Verify if run.py exists
 if [ ! -f "$RUN_PATH" ]; then
-    echo -e "${RED}Błąd: skrypt 'run.py' nie został znaleziony.${NC}"
+    echo -e "${RED}Error: The 'run.py' file wasn't found.${NC}"
     exit 1
 fi
 
 # Create desktop icon
-echo -e "${YELLOW}Tworzę ikonkę na pulpicie ...${NC}"
+echo -e "${YELLOW}Creating desktop icon ...${NC}"
 
 # Create applications directory if it doesn't exist
 mkdir -p "$HOME/.local/share/applications"
@@ -119,9 +117,9 @@ cat > "$LAUNCH_FILE" << EOF
 Version=1.0
 Type=Application
 Name=$APP_NAME
-Comment=Launch Pisak 2.0 Application
+Comment=Launch experimental AAC environment
 Exec=$SCRIPT_DIR/venv/bin/python "$RUN_PATH"
-Icon=$INSTALL_DIR/pisak/config_files/icons/pisak_logo.png
+Icon=$INSTALL_DIR/app/config_files/icons/app_logo.png
 Terminal=false
 Categories=Utility;Application;
 StartupNotify=true
@@ -139,7 +137,7 @@ fi
 
 cp $LAUNCH_FILE .
 
-echo -e "${GREEN}✓ Ikona została poprawnie stworzona.${NC}"
+echo -e "${GREEN}✓ The icon was successfully created.${NC}"
 echo ""
 
 # Update desktop database (for some desktop environments)
@@ -148,10 +146,10 @@ if command -v update-desktop-database &> /dev/null; then
 fi
 
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}Instalacja zakończyła się sukcesem!${NC}"
+echo -e "${GREEN}Installation finished!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo -e "${YELLOW}Aby uruchomić aplikację:${NC}"
-echo -e "  1. Wyszukaj '$APP_NAME' w dostępnych aplikacjach"
-echo -e "  2. Kliknij na ikonkę aplikacji znajdującą się na pulpicie."
+echo -e "${YELLOW}Fo running the application you need to:${NC}"
+echo -e "  1. Search for the  '$APP_NAME' in your available applications."
+echo -e "  2. Click on the app's icon on your desktop."
 echo ""
