@@ -16,6 +16,12 @@ dependencies = [
     "sentencepiece>=0.1.99",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-qt==4.5.0",
+]
+
 [project.scripts]
 start_app = "app.cli:main"
 
@@ -24,13 +30,12 @@ include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["app*"]
+include = ["aac_app*"]
 
 [tool.setuptools.package-data]
 app = [
-    "config_files/icons/*.svg",
-    "config_files/keyboards_layout/*.yml",
-    "predictions/*.csv",
-    "predictions/*.model",
-    "predictions/*.pt",
+    "resources/icons/*.svg",
+    "resources/icons/*.png",
+    "resources/keyboards_layout/*.yml",
+    "models/*.csv",
 ]
