@@ -8,9 +8,9 @@ except ImportError:
 from PySide6.QtGui import QFocusEvent
 from PySide6.QtWidgets import QWidget
 
-from app.scanning.strategies import BaseStrategy
+from aac_app.scanning.strategies import BaseStrategy
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="scanning", logger_name=__name__)
 

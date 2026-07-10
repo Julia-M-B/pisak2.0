@@ -1,11 +1,11 @@
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import Qt
-from app.widgets.containers import PisakColumnWidget
-from app.widgets.buttons import PisakButton, ButtonType
-from app.scanning.strategies import BackToParentStrategy
-from app.logging_config import get_module_logger
-from app.resource_paths import package_resource_path
+from aac_app.widgets.containers import PisakColumnWidget
+from aac_app.widgets.buttons import PisakButton, ButtonType
+from aac_app.scanning.strategies import BackToParentStrategy
+from aac_app.logging_config import get_module_logger
+from aac_app.resource_paths import package_resource_path
 
 
 logger = get_module_logger(file_name="components", logger_name=__name__)

@@ -5,9 +5,9 @@ Jest to czesc implementacji designu observera.
 import copy
 from typing import Any
 
-from app.events import BaseEvent
+from aac_app.events import BaseEvent
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="emitters", logger_name=__name__)
 

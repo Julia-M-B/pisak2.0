@@ -8,14 +8,14 @@ from pathlib import Path
 from PySide6 import QtGui
 from PySide6.QtWidgets import QLabel
 from PySide6.QtCore import Qt
-from app.events import AppEvent, AppEventType
-from app.widgets.containers import PisakColumnWidget
-from app.widgets.buttons import PisakButton, ButtonType
-from app.widgets.text_display import PisakDisplay
-from app.scanning.strategies import BackToParentStrategy
+from aac_app.events import AppEvent, AppEventType
+from aac_app.widgets.containers import PisakColumnWidget
+from aac_app.widgets.buttons import PisakButton, ButtonType
+from aac_app.widgets.text_display import PisakDisplay
+from aac_app.scanning.strategies import BackToParentStrategy
 from yapper import Yapper, PiperSpeaker, PiperVoicePoland
-from app.logging_config import get_module_logger
-from app.resource_paths import package_resource_path
+from aac_app.logging_config import get_module_logger
+from aac_app.resource_paths import package_resource_path
 
 logger = get_module_logger(file_name="components", logger_name=__name__)
 

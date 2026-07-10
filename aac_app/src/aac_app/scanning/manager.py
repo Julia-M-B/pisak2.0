@@ -5,14 +5,14 @@ except ImportError:
     from  typing_extensions import Self
 from dataclasses import dataclass
 
-from app.emitters import EventEmitter
-from app.events import AppEvent, AppEventType
-from app.scanning.scannable import PisakScannableItem
-from app.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER, SCAN_START_DELAY
-from app.adapters import TimerAdapter
-from app.handlers import TimerTimeoutHandler
+from aac_app.emitters import EventEmitter
+from aac_app.events import AppEvent, AppEventType
+from aac_app.scanning.scannable import PisakScannableItem
+from aac_app.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER, SCAN_START_DELAY
+from aac_app.adapters import TimerAdapter
+from aac_app.handlers import TimerTimeoutHandler
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="scanning", logger_name=__name__, experiment=True)
 
@@ -149,7 +149,7 @@ class ScanningManager(EventEmitter):
         """
         # Check if activated item is a button - if so, trigger button action via event system
         # This ensures button clicks work both from mouse and scanning activation
-        from app.widgets.buttons import PisakButton, ButtonType
+        from aac_app.widgets.buttons import PisakButton, ButtonType
         is_read_button = False
         if isinstance(activated_item, PisakButton):
             button_text = activated_item.text if activated_item.text else activated_item.additional_data

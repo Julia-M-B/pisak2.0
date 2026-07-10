@@ -4,10 +4,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QVBoxLayout, QLayout
 
 
-from app.scanning.scannable import PisakScannableWidget
-from app.scanning.strategies import BackToParentStrategy
+from aac_app.scanning.scannable import PisakScannableWidget
+from aac_app.scanning.strategies import BackToParentStrategy
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 

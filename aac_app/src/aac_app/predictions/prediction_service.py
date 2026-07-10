@@ -5,8 +5,8 @@ import threading
 from typing import Callable, Optional
 from queue import Queue
 
-from app.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
-from app.logging_config import get_module_logger
+from aac_app.predictions.beam_search import create_beam_searcher, WordPredictionBeamSearch
+from aac_app.logging_config import get_module_logger
 from torch import device
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)

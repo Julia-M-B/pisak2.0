@@ -1,4 +1,4 @@
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="scanning", logger_name=__name__)
 

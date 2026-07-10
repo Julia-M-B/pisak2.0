@@ -4,12 +4,12 @@ Uses internal event system with thread-safe adapter to update UI from worker thr
 """
 from PySide6.QtCore import QObject, Signal, Slot
 
-from app.events import AppEvent, AppEventType
-from app.predictions.prediction_service import PredictionService
-from app.components.column_components import WordColumnComponent
-from app.emitters import EventEmitter
+from aac_app.events import AppEvent, AppEventType
+from aac_app.predictions.prediction_service import PredictionService
+from aac_app.components.column_components import WordColumnComponent
+from aac_app.emitters import EventEmitter
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__, experiment=True)
 

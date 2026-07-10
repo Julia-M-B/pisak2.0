@@ -8,7 +8,7 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import Qt
 
-from app.modules.speller.module import PisakSpellerModule
+from aac_app.modules.speller.module import PisakSpellerModule
 
 logger = logging.getLogger(__name__)
 

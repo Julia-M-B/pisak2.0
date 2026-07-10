@@ -7,8 +7,8 @@ import torch.nn as nn
 import sentencepiece as spm
 from typing import List
 
-from app.logging_config import get_module_logger
-from app.settings import DEFAULT_PREDICTION_MODEL_NAME
+from aac_app.logging_config import get_module_logger
+from aac_app.settings import DEFAULT_PREDICTION_MODEL_NAME
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
 MODEL_NAME_ENV_VAR = "APP_MODEL_NAME"

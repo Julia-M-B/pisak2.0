@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QStackedWidget
 
-from app.events import AppEvent, AppEventType
-from app.scanning.scannable import PisakScannableItem
-from app.scanning.strategies import BackToParentStrategy
+from aac_app.events import AppEvent, AppEventType
+from aac_app.scanning.scannable import PisakScannableItem
+from aac_app.scanning.strategies import BackToParentStrategy
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
@@ -111,7 +111,7 @@ class ItemSwitchedHandler:
 
             self._stacked_widget.switch_shown_item(new_item)
 
-            from app.scanning.scannable import PisakScannableItem
+            from aac_app.scanning.scannable import PisakScannableItem
             
             # Check if scanning is currently active and get the old keyboard reference
             was_scanning = self._scanning_manager.is_scanning

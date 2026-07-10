@@ -8,7 +8,7 @@ import re
 CLEAN_REGEX = re.compile(r"[^a-ząćęłńóśźż0-9\s]")
 MULTIPLE_WHITESPACE = re.compile(r"[ \t\n]+")
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
 
@@ -378,7 +378,7 @@ def create_beam_searcher(model_dir: str = None, beam_width: int = 30,
     Returns:
         WordPredictionBeamSearch instance
     """
-    from app.predictions.model_loader import load_model_and_tokenizer
+    from aac_app.predictions.model_loader import load_model_and_tokenizer
 
     model, tokenizer = load_model_and_tokenizer(model_dir=model_dir,
                                                 device=device,

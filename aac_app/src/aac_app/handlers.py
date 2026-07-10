@@ -1,6 +1,6 @@
 from typing_extensions import Protocol
 
-from app.events import AppEvent, AppEventType
+from aac_app.events import AppEvent, AppEventType
 
 
 class EventHandler(Protocol):

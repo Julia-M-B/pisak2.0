@@ -11,8 +11,8 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QKeyEvent
 
-from app.emitters import EventEmitter
-from app.events import AppEvent, AppEventType
+from aac_app.emitters import EventEmitter
+from aac_app.events import AppEvent, AppEventType
 
 
 class QtEventAdapter(EventEmitter, QObject):

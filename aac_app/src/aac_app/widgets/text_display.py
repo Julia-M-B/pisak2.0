@@ -5,12 +5,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QFontMetrics, QResizeEvent
 from PySide6.QtWidgets import QLabel, QSizePolicy
 
-from app.adapters import TimerAdapter
-from app.events import AppEvent, AppEventType
-from app.emitters import EventEmitter
+from aac_app.adapters import TimerAdapter
+from aac_app.events import AppEvent, AppEventType
+from aac_app.emitters import EventEmitter
 import html
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__, experiment=True)
 

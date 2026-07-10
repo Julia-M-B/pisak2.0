@@ -18,17 +18,17 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import QWidget
 
-from app.components.display_keyboard_component import KeyboardDisplayComponent
-from app.components.column_components import WordColumnComponent
-from app.components.action_buttons_column_component import ActionButtonsColumnComponent, ActionButtonsHandler
-from app.components.keyboard import ButtonManager, ButtonClickHandler
-from app.modules.base_module import PisakBaseModule
-from app.adapters import KeyPressAdapter
-from app.events import AppEvent, AppEventType
-from app.widgets.containers import PisakRowWidget
-from app.predictions.prediction_handler import PredictionHandler
+from aac_app.components.display_keyboard_component import KeyboardDisplayComponent
+from aac_app.components.column_components import WordColumnComponent
+from aac_app.components.action_buttons_column_component import ActionButtonsColumnComponent, ActionButtonsHandler
+from aac_app.components.keyboard import ButtonManager, ButtonClickHandler
+from aac_app.modules.base_module import PisakBaseModule
+from aac_app.adapters import KeyPressAdapter
+from aac_app.events import AppEvent, AppEventType
+from aac_app.widgets.containers import PisakRowWidget
+from aac_app.predictions.prediction_handler import PredictionHandler
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="aac_app", logger_name=__name__, experiment=True)
 

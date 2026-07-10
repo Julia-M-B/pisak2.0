@@ -6,11 +6,11 @@ from PySide6 import QtGui
 from PySide6.QtCore import QSize
 from PySide6.QtGui import QFocusEvent, QFont, Qt
 from PySide6.QtWidgets import QPushButton
-from app.scanning.scannable import PisakScannableItem
-from app.scanning.strategies import BackToParentStrategy
-from app.resource_paths import package_resource_path
+from aac_app.scanning.scannable import PisakScannableItem
+from aac_app.scanning.strategies import BackToParentStrategy
+from aac_app.resource_paths import package_resource_path
 
-from app.logging_config import get_module_logger
+from aac_app.logging_config import get_module_logger
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
@@ -163,7 +163,7 @@ class PisakButtonBuilder:
             additional_data = button_dict['additional_data']
             # Handle KeyboardType enum conversion from string
             if isinstance(additional_data, str):
-                from app.components.keyboard import KeyboardType
+                from aac_app.components.keyboard import KeyboardType
                 if hasattr(KeyboardType, additional_data):
                     additional_data = getattr(KeyboardType, additional_data)
             self.set_additional_data(additional_data)

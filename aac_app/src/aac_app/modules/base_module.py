@@ -4,8 +4,8 @@ from typing import Any
 from PySide6.QtWidgets import QMainWindow, QSizePolicy
 from PySide6.QtCore import Qt as QtCore
 
-from app.scanning.manager import ScanningManager
-from app.widgets.containers import PisakContainerWidget
+from aac_app.scanning.manager import ScanningManager
+from aac_app.widgets.containers import PisakContainerWidget
 
 class PisakBaseModule(QMainWindow):
     """

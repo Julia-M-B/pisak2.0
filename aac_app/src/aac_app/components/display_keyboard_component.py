@@ -1,12 +1,12 @@
 from typing import Any
 
-from app.components.keyboard import Keyboard, KeyboardType, ButtonManager, ButtonClickHandler
-from app.widgets.containers import PisakColumnWidget
-from app.scanning.strategies import BackNLevelsStrategy
-from app.widgets.stacked_widgets import PisakStackedWidget, ItemSwitchedHandler
-from app.widgets.text_display import PisakDisplay, TextEditionHandler
-from app.logging_config import get_module_logger
-from app.resource_paths import package_resource_path
+from aac_app.components.keyboard import Keyboard, KeyboardType, ButtonManager, ButtonClickHandler
+from aac_app.widgets.containers import PisakColumnWidget
+from aac_app.scanning.strategies import BackNLevelsStrategy
+from aac_app.widgets.stacked_widgets import PisakStackedWidget, ItemSwitchedHandler
+from aac_app.widgets.text_display import PisakDisplay, TextEditionHandler
+from aac_app.logging_config import get_module_logger
+from aac_app.resource_paths import package_resource_path
 
 logger = get_module_logger(file_name="components", logger_name=__name__)
 
