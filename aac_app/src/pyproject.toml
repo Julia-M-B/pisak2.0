@@ -38,4 +38,5 @@ app = [
     "resources/icons/*.png",
     "resources/keyboards_layout/*.yml",
     "models/*.csv",
+    "models/*.model",
 ]
