@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aac_app"
+version = "1.0.0"
+description = "An experimental environment for simulating augmentative and alterantive communication app"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "PySide6==6.10.1",
+    "PyYAML==6.0.3",
+    "yapper-tts==0.7.1",
+    "torch>=2.0.0",
+    "sentencepiece>=0.1.99",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+    "pytest-qt==4.5.0",
+    "pre-commit==4.6.0"
+]
+
+[project.scripts]
+start_app = "app.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aac_app*"]
+
+[tool.setuptools.package-data]
+app = [
+    "resources/icons/*.svg",
+    "resources/icons/*.png",
+    "resources/keyboards_layout/*.yml",
+    "models/*.csv",
+    "models/*.model",
+]
+
+[tool.isort]
+# Keep isort compatible with black so the two formatters don't fight
+# (black uses an 88-char line length; isort's default is 79).
+profile = "black"
