@@ -124,7 +124,7 @@ class PisakButton(QPushButton, PisakScannableItem):
 
 class PisakButtonBuilder:
     def __init__(self):
-        self._icon_base_path = package_resource_path("config_files/icons")
+        self._icon_base_path = package_resource_path("resources/icons")
         self._text = ""
         self._icon = None
         self._scanning_strategy = BackToParentStrategy()

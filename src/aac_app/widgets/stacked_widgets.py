@@ -1,9 +1,11 @@
+from typing import Optional
+
 from PySide6.QtWidgets import QStackedWidget
 
 from aac_app.events import AppEvent, AppEventType
 from aac_app.logging_config import get_module_logger
 from aac_app.scanning.scannable import PisakScannableItem
-from aac_app.scanning.strategies import BackToParentStrategy
+from aac_app.scanning.strategies import BackToParentStrategy, BaseStrategy
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
@@ -14,9 +16,11 @@ class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     - e.g. it can display different keyboards or different modules.
     """
 
-    def __init__(self, parent, scanning_strategy=BackToParentStrategy()):
+    def __init__(self, parent, scanning_strategy: Optional[BaseStrategy] = None):
         super().__init__(parent)
-        self._scanning_strategy = scanning_strategy
+        # Build the default strategy per instance: a default argument would be
+        # evaluated once at import time and shared by every stacked widget.
+        self._scanning_strategy = scanning_strategy or BackToParentStrategy()
 
         self._items_dict = {}
         self._items = []

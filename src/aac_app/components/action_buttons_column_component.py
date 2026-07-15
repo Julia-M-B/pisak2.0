@@ -43,7 +43,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
 
     def _add_header_image(self):
         """Add the header image at the top of the column (non-scannable)"""
-        icon_path = package_resource_path("config_files/icons/funkcjenapis.svg")
+        icon_path = package_resource_path("resources/icons/funkcjenapis.svg")
         header_label = QLabel(self)
         header_label.setPixmap(QtGui.QPixmap(icon_path))
         header_label.setAlignment(Qt.AlignCenter)
@@ -65,7 +65,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
             parent=self,
             text="NOWY\t",
             icon=QtGui.QIcon(
-                package_resource_path("config_files/icons/nowy_dokument.svg")
+                package_resource_path("resources/icons/nowy_dokument.svg")
             ),
             button_type=ButtonType.CLEAR,
         )
@@ -75,9 +75,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._keyboard_button = PisakButton(
             parent=self,
             text="KLAWIATURA\t",
-            icon=QtGui.QIcon(
-                package_resource_path("config_files/icons/klawiatura.svg")
-            ),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/klawiatura.svg")),
             button_type=ButtonType.POINTER,
             additional_data="KEYBOARDS",
         )
@@ -87,7 +85,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._predictions_button = PisakButton(
             parent=self,
             text="PREDYKCJE\t",
-            icon=QtGui.QIcon(package_resource_path("config_files/icons/predykcja.svg")),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/predykcja.svg")),
             button_type=ButtonType.POINTER,
             additional_data="PREDICTIONS",
         )
@@ -97,7 +95,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._save_button = PisakButton(
             parent=self,
             text="ZAPISZ\t",
-            icon=QtGui.QIcon(package_resource_path("config_files/icons/zapisz.svg")),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/zapisz.svg")),
             button_type=ButtonType.SAVE,
         )
         self.add_item(self._save_button)
@@ -106,7 +104,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._upload_button = PisakButton(
             parent=self,
             text="WCZYTAJ\t",
-            icon=QtGui.QIcon(package_resource_path("config_files/icons/wczytaj.svg")),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/wczytaj.svg")),
             button_type=ButtonType.UPLOAD,
         )
         self.add_item(self._upload_button)
@@ -115,9 +113,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._read_button = PisakButton(
             parent=self,
             text="CZYTAJ\t",
-            icon=QtGui.QIcon(
-                package_resource_path("config_files/icons/przeczytaj.svg")
-            ),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/przeczytaj.svg")),
             button_type=ButtonType.READ,
         )
         self.add_item(self._read_button)
@@ -126,7 +122,7 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         self._exit_button = PisakButton(
             parent=self,
             text="WYJŚCIE\t",
-            icon=QtGui.QIcon(package_resource_path("config_files/icons/exit.svg")),
+            icon=QtGui.QIcon(package_resource_path("resources/icons/exit.svg")),
             button_type=ButtonType.EXIT,
         )
         self.add_item(self._exit_button)

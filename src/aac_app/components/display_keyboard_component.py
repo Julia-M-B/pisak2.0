@@ -33,13 +33,13 @@ class KeyboardDisplayComponent(PisakColumnWidget):
 
         # Create keyboards from config files
         uppercase_config = package_resource_path(
-            "config_files/keyboards_layout/uppercase_keyboard.yml"
+            "resources/keyboards_layout/uppercase_keyboard.yml"
         )
         diacritics_config = package_resource_path(
-            "config_files/keyboards_layout/diacritics_keyboard.yml"
+            "resources/keyboards_layout/diacritics_keyboard.yml"
         )
         numerical_config = package_resource_path(
-            "config_files/keyboards_layout/numerical_keyboard.yml"
+            "resources/keyboards_layout/numerical_keyboard.yml"
         )
 
         self._uppercase = Keyboard(

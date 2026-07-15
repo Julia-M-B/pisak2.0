@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QGridLayout, QHBoxLayout, QLayout, QVBoxLayout
 
 from aac_app.logging_config import get_module_logger
 from aac_app.scanning.scannable import PisakScannableWidget
-from aac_app.scanning.strategies import BackToParentStrategy
+from aac_app.scanning.strategies import BackToParentStrategy, BaseStrategy
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
@@ -17,13 +17,15 @@ class PisakContainerWidget(PisakScannableWidget):
     to scan its child items.
     """
 
-    def __init__(self, parent, strategy=BackToParentStrategy()):
+    def __init__(self, parent, strategy: Optional[BaseStrategy] = None):
         super().__init__(parent)
         # Changed to list to preserve order, using check for uniqueness
         self._items = (
             []
         )  # PisakContainerWidget stores other objects, not necessarily scannable ones
-        self._scanning_strategy = strategy
+        # Build the default strategy per instance: a default argument would be
+        # evaluated once at import time and shared by every container.
+        self._scanning_strategy = strategy or BackToParentStrategy()
         self._layout: Optional[QLayout] = None
 
     @property
@@ -80,7 +82,7 @@ class PisakGridWidget(PisakContainerWidget):
     (it has both columns and rows).
     """
 
-    def __init__(self, parent, strategy=BackToParentStrategy()):
+    def __init__(self, parent, strategy: Optional[BaseStrategy] = None):
         super().__init__(parent, strategy)
         self._layout = QGridLayout()
 
@@ -90,7 +92,7 @@ class PisakColumnWidget(PisakContainerWidget):
     A PisakContainerWidget whose child items are displayed in a single column.
     """
 
-    def __init__(self, parent, strategy=BackToParentStrategy()):
+    def __init__(self, parent, strategy: Optional[BaseStrategy] = None):
         super().__init__(parent, strategy)
         self._layout = QVBoxLayout()
 
@@ -100,6 +102,6 @@ class PisakRowWidget(PisakContainerWidget):
     A PisakContainerWidget whose child items are displayed in a single row.
     """
 
-    def __init__(self, parent, strategy=BackToParentStrategy()):
+    def __init__(self, parent, strategy: Optional[BaseStrategy] = None):
         super().__init__(parent, strategy)
         self._layout = QHBoxLayout()

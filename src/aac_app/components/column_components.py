@@ -34,7 +34,7 @@ class WordColumnComponent(PisakColumnWidget):
 
     def _add_header_image(self):
         """Add the header image at the top of the column (non-scannable)"""
-        icon_path = package_resource_path("config_files/icons/predykcjanapis.svg")
+        icon_path = package_resource_path("resources/icons/predykcjanapis.svg")
         header_label = QLabel(self)
         header_label.setPixmap(QtGui.QPixmap(icon_path))
         header_label.setAlignment(Qt.AlignCenter)
