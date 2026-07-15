@@ -23,10 +23,15 @@ class ScanningState:
     is_scanning: bool = False
     current_item: Optional[PisakScannableItem] = None
     loops_counter: int = 0
-    max_loop_number = SCAN_LOOP_NUMBER
+    # Annotated so that it is a real dataclass field: without the annotation it
+    # would be a plain class attribute shared by every ScanningState instance.
+    max_loop_number: int = SCAN_LOOP_NUMBER
 
-    def __iadd__(self, value: int) -> None:
+    def __iadd__(self, value: int) -> Self:
+        # Must return self: `state += 1` rebinds the name to whatever this
+        # returns, so returning None would silently turn `state` into None.
         self.loops_counter += value
+        return self
 
     def set_is_scanning(self, state: bool) -> Self:
         self.is_scanning = state
