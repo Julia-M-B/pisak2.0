@@ -7,6 +7,7 @@ name = "aac_app"
 version = "1.0.0"
 description = "An experimental environment for simulating augmentative and alterantive communication app"
 readme = "README.md"
+license = "GPL-3.0-or-later"
 requires-python = ">=3.10,<3.14"
 dependencies = [
     "PySide6==6.10.1",
