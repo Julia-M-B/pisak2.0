@@ -21,21 +21,21 @@ dependencies = [
 dev = [
     "pytest==9.1.1",
     "pytest-qt==4.5.0",
-    "pre-commit==4.6.0"
+    "pre-commit==4.6.0",
 ]
 
 [project.scripts]
-start_app = "app.cli:main"
+start_app = "aac_app.cli:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["aac_app*"]
 
 [tool.setuptools.package-data]
-app = [
+aac_app = [
     "resources/icons/*.svg",
     "resources/icons/*.png",
     "resources/keyboards_layout/*.yml",
