@@ -34,11 +34,17 @@ class EventEmitter:
 
     def emit_event(self, event: BaseEvent) -> None:
         """
-        Emit an event to all subscribed handlers
+        Emit an event to all subscribed handlers.
+
+        A failing handler is logged but does not stop the event from reaching the
+        remaining handlers - one broken observer must not break the whole chain.
         """
         for handler in self._event_handlers:
             try:
                 handler.handle_event(event)
-            except Exception as e:
-                # Log error but don't break the event chain
-                logger.debug("Error in handler %s: %s", handler, e)
+            except Exception:
+                # Logged at error level with a traceback: swallowing these at debug
+                # level hides real bugs, since every handler failure ends up here.
+                logger.exception(
+                    "Error in handler %s while handling %s", handler, event
+                )

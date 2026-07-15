@@ -35,7 +35,7 @@ class PredictionService:
         Initialize the prediction service.
 
         :param n_words: Number of words to predict
-        :param use_real_model: If True, use LSTM model. If False, use dummy predictions.
+        :param use_real_model: If True, use the LSTM model. If False, always return empty predictions.
         :param model_dir: Directory containing model.pt and spm_pl.model. If None, uses predictions directory.
         :param beam_width: Maximum number of partial words to keep in beam (only used with real model)
         :param max_word_length: Maximum number of tokens per word (only used with real model)
@@ -56,9 +56,13 @@ class PredictionService:
                     beam_width=beam_width,
                     max_word_length=max_word_length,
                 )
-            except Exception as e:
-                logger.debug("Warning: Could not load real model: %s", e)
-                logger.debug("Falling back to dummy predictions.")
+            except Exception:
+                # A missing/broken model must be loud: without it the app silently
+                # shows no predictions at all, which would invalidate an experiment.
+                logger.exception(
+                    "Could not load the prediction model; "
+                    "predictions will be empty for this session"
+                )
                 self._use_real_model = False
 
     def start(self):
@@ -124,14 +128,22 @@ class PredictionService:
                 if self._callback:
                     self._callback(predictions)
 
-            except Exception:
-                # Queue.get timeout or other errors - just continue
+            except Empty:
+                # No request within the timeout - expected, just poll again.
                 continue
+            except Exception:
+                # Unexpected failure: log it (with traceback) but keep the worker
+                # alive, otherwise predictions would stop silently for the session.
+                logger.exception("Unexpected error in the prediction worker thread")
 
     def _generate_predictions(self, text: str, cursor_position: int) -> list[str]:
         """
         Generate word predictions based on current text and cursor position.
-        Uses beam search with LSTM model if available, otherwise falls back to dummy predictions.
+        Uses beam search with the LSTM model if available. If the model is
+        unavailable or fails, returns empty predictions rather than made-up
+        words, so that no fake suggestions can influence an experiment.
+
+        Always returns exactly `n_words` entries.
 
         :param text: Current text content
         :param cursor_position: Current cursor position
@@ -158,9 +170,14 @@ class PredictionService:
                     predictions.extend(empty_predictions)
 
                 return predictions[: self._n_words]
-            except Exception as e:
-                logger.debug("Error generating predictions with real model: %s", e)
-                # Fall through to dummy predictions
-                pass
+            except Exception:
+                logger.exception(
+                    "Error generating predictions with the real model; "
+                    "returning empty predictions"
+                )
 
-        return predictions
+        return self._empty_predictions()
+
+    def _empty_predictions(self) -> list[str]:
+        """Return a list of `n_words` blank predictions (used when no model is available)."""
+        return [""] * self._n_words
