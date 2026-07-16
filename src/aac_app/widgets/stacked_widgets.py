@@ -17,7 +17,11 @@ class PisakStackedWidget(QStackedWidget, PisakScannableItem):
     """
 
     def __init__(self, parent, scanning_strategy: Optional[BaseStrategy] = None):
-        super().__init__(parent)
+        # Initialise both bases explicitly rather than relying on PySide6 forwarding
+        # `super().__init__` along the MRO (see PisakScannableWidget for details).
+        QStackedWidget.__init__(self, parent)
+        PisakScannableItem.__init__(self)
+
         # Build the default strategy per instance: a default argument would be
         # evaluated once at import time and shared by every stacked widget.
         self._scanning_strategy = scanning_strategy or BackToParentStrategy()

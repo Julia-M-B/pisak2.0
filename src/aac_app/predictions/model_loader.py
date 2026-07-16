@@ -65,11 +65,13 @@ class LSTMModelWrapper:
 
         Args:
             model_path: Path to model.pt file
-            device: Device to run model on ('cpu' or 'cuda'). If None, auto-detect.
+            device: Device to run model on ('cpu' or 'cuda'). If None, defaults to
+                    'cpu' (GPU auto-detection is intentionally disabled for now).
             seq_len: Maximum context length; longer contexts are trimmed to the last seq_len tokens.
         """
         if device is None:
-            # device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            # GPU auto-detection deliberately disabled; re-enable with:
+            # device = "cuda" if torch.cuda.is_available() else "cpu"
             device = "cpu"
         self.device = torch.device(device)
 

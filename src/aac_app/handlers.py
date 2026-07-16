@@ -21,4 +21,4 @@ class TimerTimeoutHandler:
     def handle_event(self, event: AppEvent) -> None:
         """Handle timer timeout event"""
         if event.type == AppEventType.TIMER_TIMEOUT:
-            self._scanning_manager._on_timer_timeout()
+            self._scanning_manager.on_scan_tick()

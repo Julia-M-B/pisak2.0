@@ -97,11 +97,11 @@ class ButtonManager(EventEmitter):
             case ButtonType.EXIT:
                 self.emit_event(AppEvent(AppEventType.MODULE_EXITED))
             case ButtonType.CHARACTER:
-                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text))
+                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text()))
             case ButtonType.WORD:
-                self.emit_event(AppEvent(AppEventType.WORD_ADDED, button.text))
+                self.emit_event(AppEvent(AppEventType.WORD_ADDED, button.text()))
             case _:
-                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text))
+                self.emit_event(AppEvent(AppEventType.CHAR_ADDED, button.text()))
 
 
 class ButtonClickHandler:
