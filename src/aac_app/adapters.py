@@ -9,8 +9,7 @@ a PySide signal into an internal event.
 
 from typing import Optional
 
-from PySide6.QtCore import QObject, QTimer
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtCore import QEvent, QObject, QTimer
 from PySide6.QtWidgets import QWidget
 
 from aac_app.emitters import EventEmitter
@@ -28,64 +27,69 @@ class QtEventAdapter(EventEmitter, QObject):
         EventEmitter.__init__(self)
 
 
-class KeyPressAdapter(QtEventAdapter):
+class _WidgetEventAdapter(QtEventAdapter):
     """
-    Adapter for the PySide `keyPressEvent`.
-    Adds event emission to a widget's `keyPressEvent` implementation
-    (works a bit like a decorator).
+    Base for adapters that watch a single widget through Qt's event filter.
+
+    An event filter is used rather than replacing the widget's handler method:
+    monkey-patching cannot be undone, breaks when two adapters watch the same
+    widget, and hides the behaviour from anyone reading the widget class.
+
+    Subclasses declare which Qt event type they translate and how.
     """
+
+    #: Qt event type the subclass reacts to
+    watched_event_type: QEvent.Type
 
     def __init__(self, widget: QWidget, parent: Optional[QObject] = None):
         super().__init__(parent)
         self._widget = widget
-        self._original_key_press = widget.keyPressEvent
-        # Override keyPressEvent to emit events
-        widget.keyPressEvent = self._on_key_press
+        widget.installEventFilter(self)
 
-    def _on_key_press(self, event: QKeyEvent):
-        """Convert Qt keyPressEvent to AppEvent"""
-        # Call original handler first
-        if self._original_key_press:
-            self._original_key_press(event)
+    def detach(self) -> None:
+        """Stop watching the widget."""
+        self._widget.removeEventFilter(self)
 
-        # Emit framework-agnostic event
-        app_event = AppEvent(
+    def _build_event(self, event: QEvent) -> AppEvent:
+        raise NotImplementedError("Method `_build_event` is not implemented.")
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """Translate a watched Qt event into an AppEvent, without consuming it."""
+        if watched is self._widget and event.type() == self.watched_event_type:
+            self.emit_event(self._build_event(event))
+
+        # Never consume the event - the widget must still receive it.
+        return super().eventFilter(watched, event)
+
+
+class KeyPressAdapter(_WidgetEventAdapter):
+    """
+    Adapter for Qt key press events.
+    Turns every key press on the watched widget into a SWITCH_PRESSED AppEvent.
+    """
+
+    watched_event_type = QEvent.Type.KeyPress
+
+    def _build_event(self, event: QEvent) -> AppEvent:
+        return AppEvent(
             AppEventType.SWITCH_PRESSED,
             {"key": event.key(), "text": event.text(), "modifiers": event.modifiers()},
         )
-        self.emit_event(app_event)
 
 
-class MousePressAdapter(QtEventAdapter):
+class MousePressAdapter(_WidgetEventAdapter):
     """
-    Adapter for the PySide `mousePressEvent`.
-    Adds event emission to a widget's `mousePressEvent` implementation
-    (works a bit like a decorator).
+    Adapter for Qt mouse press events.
+    Turns every mouse press on the watched widget into a SWITCH_PRESSED AppEvent.
+
+    Currently unused: the switch is bound to the space key instead of the mouse.
+    Kept as part of the adapter layer for alternative switch hardware.
     """
 
-    def __init__(self, widget: QWidget, parent: Optional[QObject] = None):
-        super().__init__(parent)
-        self._widget = widget
-        self._original_mouse_press = widget.mousePressEvent
-        # Override mousePressEvent to emit events
-        widget.mousePressEvent = self._on_mouse_press
+    watched_event_type = QEvent.Type.MouseButtonPress
 
-    def _on_mouse_press(self, event: QKeyEvent):
-        """Convert Qt mousePressEvent to AppEvent"""
-        # Call original handler first
-        if self._original_mouse_press:
-            self._original_mouse_press(event)
-
-        # Emit framework-agnostic event
-        app_event = AppEvent(
-            AppEventType.SWITCH_PRESSED,
-            {
-                # 'key': event.key(),
-                # 'text': event.text(),
-                # 'modifiers': event.modifiers()
-            },
-        )
-        self.emit_event(app_event)
+    def _build_event(self, event: QEvent) -> AppEvent:
+        return AppEvent(AppEventType.SWITCH_PRESSED, {})
 
 
 class TimerAdapter(QtEventAdapter):
