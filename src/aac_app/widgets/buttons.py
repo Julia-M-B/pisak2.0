@@ -1,6 +1,6 @@
 import os
 from enum import Enum, auto
-from typing import Any
+from typing import Any, Optional
 
 from PySide6 import QtGui
 from PySide6.QtCore import QSize
@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QPushButton
 from aac_app.logging_config import get_module_logger
 from aac_app.resource_paths import package_resource_path
 from aac_app.scanning.scannable import PisakScannableItem
-from aac_app.scanning.strategies import BackToParentStrategy
+from aac_app.scanning.strategies import BackToParentStrategy, BaseStrategy
 
 logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
@@ -40,49 +40,61 @@ class PisakButton(QPushButton, PisakScannableItem):
         parent,
         text="",
         icon=None,
-        scanning_strategy=BackToParentStrategy(),
+        scanning_strategy: Optional[BaseStrategy] = None,
         button_type=None,
-        button_ui=None,
         additional_data: Any = None,
     ):
-        super().__init__(parent=parent, text=text)
+        # Initialise both bases explicitly rather than relying on PySide6 forwarding
+        # `super().__init__` along the MRO (see PisakScannableWidget for details).
+        QPushButton.__init__(self, parent=parent, text=text)
+        PisakScannableItem.__init__(self)
+
         if icon:
             self.setIcon(icon)
             self.setIconSize(QSize(32, 32))
-        self._scanning_strategy = scanning_strategy
-        self._text = text
+        # Build the default strategy per instance: a default argument would be
+        # evaluated once at import time and shared by every button.
+        self._scanning_strategy = scanning_strategy or BackToParentStrategy()
         self._button_type = button_type
         self._additional_data = additional_data
-        if button_ui:
-            self._set_ui(button_ui)
-        else:
-            self.init_ui()
-
-    def _set_ui(self, ui_dict):
-        self.init_ui()  # placeholder for setting ui defined in config file
+        self.init_ui()
 
     def init_ui(self):
         self.setFont(QFont("Arial", 16))
+        # The highlighted look is expressed as a selector on the `highlighted`
+        # property instead of a second stylesheet. The sheet is therefore parsed
+        # once per button rather than rebuilt on every scanning step.
+        self.setProperty("highlighted", False)
         self.setStyleSheet("""
-                            background-color: #ede4da;
-                            color: black;
-                            border-style: solid;
-                            border-width: 2px;
-                            border-color: black;
-                            border-radius: 5px;
-                            min-height: 50px;
-                            font-weight: bold;
-                            """)
+            PisakButton {
+                background-color: #ede4da;
+                color: black;
+                border-style: solid;
+                border-width: 2px;
+                border-color: black;
+                border-radius: 5px;
+                min-height: 50px;
+                font-weight: bold;
+            }
+            PisakButton[highlighted="true"] {
+                background-color: #5ea9eb;
+                border-color: #9dccf5;
+            }
+            """)
         self.setLayoutDirection(Qt.RightToLeft)
 
-    @property
-    def text(self):
-        return self._text
+    def _set_highlighted(self, highlighted: bool) -> None:
+        """Toggle the highlighted look; Qt re-applies property selectors on repolish."""
+        if self.property("highlighted") == highlighted:
+            return
+        self.setProperty("highlighted", highlighted)
+        self.style().unpolish(self)
+        self.style().polish(self)
 
-    @text.setter
-    def text(self, text):
-        self._text = text
-        super().setText(text)
+    # Note: the button label is deliberately not wrapped in a `text` property.
+    # QPushButton already exposes `text()`/`setText()`, and shadowing `text` with a
+    # property both broke idiomatic `button.text()` calls and duplicated the label
+    # into a second source of truth.
 
     @property
     def button_type(self):
@@ -105,21 +117,10 @@ class PisakButton(QPushButton, PisakScannableItem):
             super().focusOutEvent(event)
 
     def highlight_self(self):
-        self.setStyleSheet("""
-                            background-color: #5ea9eb;
-                            color: black;
-                            border-style: solid;
-                            border-width: 2px;
-                            border-color: #9dccf5;
-                            border-radius: 5px;
-                            min-height: 50px;
-                            font-weight: bold;
-                            qproperty-iconPosition: Right;
-                            qproperty-iconSpacing: 10;
-                            """)
+        self._set_highlighted(True)
 
     def reset_highlight_self(self):
-        self.init_ui()
+        self._set_highlighted(False)
 
 
 class PisakButtonBuilder:
@@ -127,7 +128,9 @@ class PisakButtonBuilder:
         self._icon_base_path = package_resource_path("resources/icons")
         self._text = ""
         self._icon = None
-        self._scanning_strategy = BackToParentStrategy()
+        # Left as None so that every built button gets its own default strategy,
+        # even if one builder is reused for several buttons.
+        self._scanning_strategy: Optional[BaseStrategy] = None
         self._button_type = None
         self._additional_data = None
 
