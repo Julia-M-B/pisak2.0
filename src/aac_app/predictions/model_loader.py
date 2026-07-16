@@ -3,6 +3,7 @@ Model loader and tokenizer wrapper for LSTM language model.
 """
 
 import os
+from pathlib import Path
 from typing import List
 
 import sentencepiece as spm
@@ -10,6 +11,7 @@ import torch
 import torch.nn as nn
 
 from aac_app.logging_config import get_module_logger
+from aac_app.predictions.model_store import resolve_model_file
 from aac_app.settings import DEFAULT_PREDICTION_MODEL_NAME
 
 logger = get_module_logger(file_name="predictions", logger_name=__name__)
@@ -210,33 +212,38 @@ def load_model_and_tokenizer(
     """
     Convenience function to load both model and tokenizer.
 
+    Files are located through `aac_app.predictions.model_store`, which checks the
+    bundled models directory and the per-user cache and downloads large weights on
+    first use. Pass `model_dir` to load from a specific directory instead.
+
     Args:
-        model_dir: Directory containing model and spm_pl.model files.
-                  If None, uses predictions directory.
-        device: Device to run model on. If None, auto-detect.
+        model_dir: Directory containing the model and spm_pl.model files. If None,
+                   files are resolved (and downloaded if needed) via the model store.
+        device: Device to run model on. If None, defaults to CPU.
         model_name: Model filename. If None, uses the APP_MODEL_NAME env var
                     and falls back to the config default.
 
     Returns:
         Tuple of (model_wrapper, tokenizer)
     """
-    if model_dir is None:
-        # Get directory of this file
-        model_dir = os.path.dirname(os.path.abspath(__file__))
-
     if model_name is None:
         model_name = os.getenv(MODEL_NAME_ENV_VAR, DEFAULT_PREDICTION_MODEL_NAME)
 
-    model_path = os.path.join(model_dir, model_name)
-    tokenizer_path = os.path.join(model_dir, "spm_pl.model")
+    if model_dir is not None:
+        # Explicit directory: use it as-is, no download.
+        model_path = Path(model_dir) / model_name
+        tokenizer_path = Path(model_dir) / "spm_pl.model"
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+        if not tokenizer_path.exists():
+            raise FileNotFoundError(f"Tokenizer file not found: {tokenizer_path}")
+    else:
+        # Resolve via the store: bundled -> cache -> download.
+        model_path = resolve_model_file(model_name)
+        tokenizer_path = resolve_model_file("spm_pl.model")
 
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model file not found: {model_path}")
-    if not os.path.exists(tokenizer_path):
-        raise FileNotFoundError(f"Tokenizer file not found: {tokenizer_path}")
-
-    model = LSTMModelWrapper(model_path, device=device, seq_len=seq_len)
-    tokenizer = SentencePieceTokenizer(tokenizer_path)
+    model = LSTMModelWrapper(str(model_path), device=device, seq_len=seq_len)
+    tokenizer = SentencePieceTokenizer(str(tokenizer_path))
 
     return model, tokenizer
 

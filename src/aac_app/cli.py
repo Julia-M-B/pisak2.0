@@ -21,8 +21,17 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--model",
         default=DEFAULT_PREDICTION_MODEL_NAME,
         help=(
-            "Prediction model filename from aac_app/predictions directory "
+            "Prediction model filename; resolved from the bundled models, the "
+            "download cache, or fetched on first use "
             f"(default: {DEFAULT_PREDICTION_MODEL_NAME})."
+        ),
+    )
+    parser.add_argument(
+        "--download-models",
+        action="store_true",
+        help=(
+            "Download all model weights into the cache and exit. Use this to "
+            "prepare a machine before running the experiment offline."
         ),
     )
     parser.add_argument(
@@ -80,6 +89,14 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     setup_logging()
+
+    if args.download_models:
+        from aac_app.predictions.model_store import prefetch_models
+
+        logger.info("Downloading model weights...")
+        prefetch_models()
+        return
+
     logger.info("Running the experimental environment with model: %s", args.model)
     logger.info("Scanning settings: %s", settings)
 

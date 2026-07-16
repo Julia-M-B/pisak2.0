@@ -22,3 +22,7 @@ env/
 
 # pytest
 .pytest_cache/
+
+# Large model weights: hosted as release assets and downloaded at runtime
+# (see aac_app.predictions.model_store), never committed.
+*.pt

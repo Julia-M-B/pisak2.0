@@ -35,12 +35,14 @@ where = ["src"]
 include = ["aac_app*"]
 
 [tool.setuptools.package-data]
+# resources/**/* recurses into icons/ and keyboards_layout/, so no need to list
+# each extension. models/ is listed by extension ON PURPOSE: only the small files
+# (tokenizer, unigram list) are bundled - the large *.pt weights are downloaded at
+# runtime (see aac_app.predictions.model_store), so they must NOT be globbed in.
 aac_app = [
-    "resources/icons/*.svg",
-    "resources/icons/*.png",
-    "resources/keyboards_layout/*.yml",
-    "models/*.csv",
+    "resources/**/*",
     "models/*.model",
+    "models/*.csv",
 ]
 
 [tool.isort]
