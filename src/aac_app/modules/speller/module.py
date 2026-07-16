@@ -26,12 +26,14 @@ from aac_app.components.column_components import WordColumnComponent
 from aac_app.components.display_keyboard_component import KeyboardDisplayComponent
 from aac_app.components.keyboard import ButtonClickHandler, ButtonManager
 from aac_app.events import AppEvent, AppEventType
+from aac_app.experiment import close_experiment_recorder, get_experiment_recorder
 from aac_app.logging_config import get_module_logger
 from aac_app.modules.base_module import PisakBaseModule
 from aac_app.predictions.prediction_handler import PredictionHandler
+from aac_app.widgets.buttons import ButtonType
 from aac_app.widgets.containers import PisakRowWidget
 
-logger = get_module_logger(file_name="aac_app", logger_name=__name__, experiment=True)
+logger = get_module_logger(file_name="aac_app", logger_name=__name__)
 
 
 class PisakSpellerModule(PisakBaseModule):
@@ -115,11 +117,17 @@ class PisakSpellerModule(PisakBaseModule):
         """Clean up resources when module is closed"""
 
         current_text = self._action_button_handler.text_display.text
-        logger.debug(f"EXITING APP,ButtonType.EXIT,{current_text},")
+        get_experiment_recorder().record(
+            module=__name__,
+            action="EXITING APP",
+            event_type=ButtonType.EXIT,
+            text=current_text,
+        )
 
         # Stop the prediction service thread
         if hasattr(self, "_prediction_handler"):
             self._prediction_handler.stop()
+        close_experiment_recorder()
         super().closeEvent(event)
 
     def _on_space_shortcut(self):
@@ -149,7 +157,11 @@ class ScanningSwitchHandler:
             return
 
         self._switch_pressed_counter += 1
-        logger.debug(f"SWITCH PRESSED,,,{self._switch_pressed_counter}")
+        get_experiment_recorder().record(
+            module=__name__,
+            action="SWITCH PRESSED",
+            additional=self._switch_pressed_counter,
+        )
         if not self._scanning_manager.is_scanning:
             # Start scanning from the main row (word column + keyboards)
             scannable_items = getattr(self._main_scannable_item, "scannable_items", [])

@@ -5,17 +5,18 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from aac_app.adapters import TimerAdapter
 from aac_app.emitters import EventEmitter
 from aac_app.events import AppEvent, AppEventType
+from aac_app.experiment import get_experiment_recorder
 from aac_app.handlers import TimerTimeoutHandler
 from aac_app.logging_config import get_module_logger
 from aac_app.scanning.scannable import PisakScannableItem
-from aac_app.settings import SCAN_HIGHLIGHT_TIME, SCAN_LOOP_NUMBER, SCAN_START_DELAY
+from aac_app.settings import get_scanning_settings
 
-logger = get_module_logger(file_name="scanning", logger_name=__name__, experiment=True)
+logger = get_module_logger(file_name="scanning", logger_name=__name__)
 
 
 @dataclass
@@ -25,7 +26,10 @@ class ScanningState:
     loops_counter: int = 0
     # Annotated so that it is a real dataclass field: without the annotation it
     # would be a plain class attribute shared by every ScanningState instance.
-    max_loop_number: int = SCAN_LOOP_NUMBER
+    # Resolved per instance so that a command-line override is picked up.
+    max_loop_number: int = field(
+        default_factory=lambda: get_scanning_settings().loop_number
+    )
 
     def __iadd__(self, value: int) -> Self:
         # Must return self: `state += 1` rebinds the name to whatever this
@@ -62,13 +66,15 @@ class ScanningManager(EventEmitter):
 
     def __init__(self):
         super().__init__()
-        self._timer = TimerAdapter(int(SCAN_HIGHLIGHT_TIME * 1000))
+        # Read settings here rather than at import time, so that overrides applied
+        # by the command line before the UI is built are respected.
+        settings = get_scanning_settings()
+        self._timer = TimerAdapter(int(settings.highlight_time * 1000))
         self._timer.subscribe(TimerTimeoutHandler(scanning_manager=self))
-        self._start_delay_timer = TimerAdapter(int(SCAN_START_DELAY * 1000))
+        self._start_delay_timer = TimerAdapter(int(settings.start_delay * 1000))
         self._start_delay_timer.subscribe(self._DelayedStartHandler(self))
 
         self._scanning_state = ScanningState()
-        self._pending_start_token = 0
 
     def start_scanning(self, item: PisakScannableItem) -> None:
         """Start scanning a scannable item"""
@@ -82,18 +88,15 @@ class ScanningManager(EventEmitter):
         if self._start_delay_timer.is_active():
             self._start_delay_timer.stop()
 
-        # Set new scanning state (this increments scan_id)
+        # Set new scanning state
         self._scanning_state.set_is_scanning(True).set_current_item(
             item
         ).set_loops_counter(0)
 
         iter(item)
 
-        # Delay first highlight to make choosing first child item easier.
-        self._pending_start_token += 1
-
-        # Emit event
         self.emit_event(AppEvent(AppEventType.SCANNING_STARTED, item))
+        # Delay the first highlight to make choosing the first child item easier.
         self._start_delay_timer.start()
 
         logger.info("Started scanning item %s", self._scanning_state.current_item)
@@ -106,7 +109,6 @@ class ScanningManager(EventEmitter):
         self._timer.stop()
         if self._start_delay_timer.is_active():
             self._start_delay_timer.stop()
-        self._pending_start_token += 1
 
         # Reset iterator counter on old item before clearing it
         current_item = self._scanning_state.current_item
@@ -166,12 +168,13 @@ class ScanningManager(EventEmitter):
 
         is_read_button = False
         if isinstance(activated_item, PisakButton):
-            button_text = (
-                activated_item.text
-                if activated_item.text
-                else activated_item.additional_data
+            button_text = activated_item.text() or activated_item.additional_data
+            get_experiment_recorder().record(
+                module=__name__,
+                action="BUTTON CLICKED",
+                event_type=activated_item.button_type,
+                text=button_text or "",
             )
-            logger.debug(f"BUTTON CLICKED,{activated_item.button_type},{button_text},")
             self.emit_event(AppEvent(AppEventType.BUTTON_CLICKED, activated_item))
 
             # Check if this is a READ button - if so, we should stop scanning completely
@@ -224,9 +227,12 @@ class ScanningManager(EventEmitter):
             # No strategy, stop scanning
             self.emit_event(AppEvent(AppEventType.SCANNING_RESET, None))
 
-    def _on_timer_timeout(self):
+    def on_scan_tick(self) -> None:
         """
-        Handle timer timeout - focus next item
+        Handle a scanning timer tick - focus the next item.
+
+        Part of the manager's API for its timer handlers (see `TimerTimeoutHandler`);
+        not meant to be called from anywhere else.
         """
         # Double-check scanning state - this prevents stale timer callbacks from affecting new scans
         if (
@@ -235,16 +241,7 @@ class ScanningManager(EventEmitter):
         ):
             return
 
-        # # Verify this callback is for the current scan session (not a stale callback)
-        # if self._scanning_state.scan_id != self._active_scan_id:
-        #     # This is a stale callback from a previous scan session, ignore it
-        #     return
-
         current_item = self._scanning_state.current_item
-
-        # Verify current_item is still valid (not None)
-        if not current_item:
-            return
 
         # Check if we've completed all loops
         scannable_items = getattr(current_item, "scannable_items", [])
@@ -256,16 +253,19 @@ class ScanningManager(EventEmitter):
 
         self._focus_next_item()
 
-    def _on_start_delay_timeout(self, pending_token: int):
+    def on_start_delay_elapsed(self) -> None:
         """
-        Start scanning ticks and first focus after configured startup delay.
+        Start scanning ticks and first focus after the configured startup delay.
+
+        Part of the manager's API for its timer handlers (see `_DelayedStartHandler`);
+        not meant to be called from anywhere else.
         """
         # Delay timer should act like one-shot.
         if self._start_delay_timer.is_active():
             self._start_delay_timer.stop()
 
-        if pending_token != self._pending_start_token:
-            return
+        # Guards against a stale callback: `stop_scanning` stops the timer and
+        # clears the state, so a late tick must not focus anything.
         if (
             not self._scanning_state.is_scanning
             or not self._scanning_state.current_item
@@ -285,7 +285,17 @@ class ScanningManager(EventEmitter):
 
         current_item = self._scanning_state.current_item
 
-        focused_item = next(current_item)
+        try:
+            focused_item = next(current_item)
+        except StopIteration:
+            # The item has no scannable children - there is nothing to focus, so
+            # stop instead of leaving a scan running over an empty container.
+            logger.warning(
+                "Item %s has no scannable children; stopping scanning", current_item
+            )
+            self.stop_scanning()
+            return
+
         focused_item.setFocus()
 
     def _reset_scanning(self):
@@ -328,5 +338,4 @@ class ScanningManager(EventEmitter):
 
         def handle_event(self, event: AppEvent) -> None:
             if event.type == AppEventType.TIMER_TIMEOUT:
-                token = self._scanning_manager._pending_start_token
-                self._scanning_manager._on_start_delay_timeout(token)
+                self._scanning_manager.on_start_delay_elapsed()

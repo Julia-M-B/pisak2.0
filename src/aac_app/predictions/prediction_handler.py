@@ -8,12 +8,11 @@ from PySide6.QtCore import QObject, Signal, Slot
 from aac_app.components.column_components import WordColumnComponent
 from aac_app.emitters import EventEmitter
 from aac_app.events import AppEvent, AppEventType
+from aac_app.experiment import get_experiment_recorder
 from aac_app.logging_config import get_module_logger
-from aac_app.predictions.prediction_service import PredictionService
+from aac_app.predictions.prediction_service import N_WORDS, PredictionService
 
-logger = get_module_logger(
-    file_name="predictions", logger_name=__name__, experiment=True
-)
+logger = get_module_logger(file_name="predictions", logger_name=__name__)
 
 
 class ThreadSafeEventAdapter(QObject, EventEmitter):
@@ -49,8 +48,11 @@ class ThreadSafeEventAdapter(QObject, EventEmitter):
         """
         # Now we're in the main thread, safe to emit events that update UI
         event = AppEvent(AppEventType.PREDICTIONS_READY, predictions)
-        predictions_str = "  ".join(predictions)
-        logger.debug(f"GENERATED PREDICTIONS,,,{predictions_str}")
+        get_experiment_recorder().record(
+            module=__name__,
+            action="GENERATED PREDICTIONS",
+            additional="  ".join(predictions),
+        )
         self.emit_event(event)
 
 
@@ -60,12 +62,13 @@ class PredictionHandler:
     Uses thread-safe event adapter to bridge worker thread and UI thread.
     """
 
-    def __init__(self, word_column: WordColumnComponent, n_words: int = 10):
+    def __init__(self, word_column: WordColumnComponent, n_words: int = N_WORDS):
         """
         Initialize the prediction handler.
 
         :param word_column: The WordColumnComponent to update with predictions
-        :param n_words: Number of words to predict
+        :param n_words: Number of words to predict; defaults to N_WORDS so that
+                        the handler and the service cannot drift apart.
         """
         self._word_column = word_column
         self._prediction_service = PredictionService(n_words=n_words)

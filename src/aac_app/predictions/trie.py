@@ -8,6 +8,10 @@ fallback when beam search finds no valid predictions.
 import csv
 from typing import Dict, List, Optional, Tuple
 
+from aac_app.logging_config import get_module_logger
+
+logger = get_module_logger(file_name="predictions", logger_name=__name__)
+
 
 class TrieNode:
     __slots__ = ("children", "is_word")
@@ -122,8 +126,12 @@ class PolishWordTrie:
         rows.sort(key=lambda x: x[1], reverse=(frequency_column is not None))
         trie.top_n_words = [word for word, _ in rows[:top_n_fallback]]
 
-        print(f"Trie built: {trie.word_count:,} words loaded from {csv_path}")
-        print(f"Fallback list: top {len(trie.top_n_words)} most frequent words stored")
+        logger.info(
+            "Trie built: %s words loaded from %s", f"{trie.word_count:,}", csv_path
+        )
+        logger.info(
+            "Fallback list: top %s most frequent words stored", len(trie.top_n_words)
+        )
         return trie
 
     @classmethod

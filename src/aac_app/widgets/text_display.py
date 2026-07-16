@@ -9,9 +9,10 @@ from PySide6.QtWidgets import QLabel, QSizePolicy
 from aac_app.adapters import TimerAdapter
 from aac_app.emitters import EventEmitter
 from aac_app.events import AppEvent, AppEventType
+from aac_app.experiment import get_experiment_recorder
 from aac_app.logging_config import get_module_logger
 
-logger = get_module_logger(file_name="widgets", logger_name=__name__, experiment=True)
+logger = get_module_logger(file_name="widgets", logger_name=__name__)
 
 
 class PisakDisplay(QLabel, EventEmitter):
@@ -190,6 +191,20 @@ class PisakDisplay(QLabel, EventEmitter):
             self.update_display()
             self.emit_text_changed()
 
+    def set_text(self, text: str) -> None:
+        """
+        Replace the whole content of the display and place the cursor at its end.
+
+        Used when loading previously saved text; unlike `update_text` this does not
+        insert at the cursor but discards the current content.
+
+        :param text: The new content of the display
+        """
+        self._text = text
+        self._cursor_index = len(text)
+        self.update_display()
+        self.emit_text_changed()
+
     def update_text(self, text):
         """Insert arbitrary text at the cursor position."""
         current_text = self._text
@@ -222,7 +237,12 @@ class PisakDisplay(QLabel, EventEmitter):
         # Save current text to history if it's not empty
         if self._text:
             self._history.append(self._text)
-            logger.debug(f"TEXT CLEARED,ButtonType.CLEAR,{self._text},")
+            get_experiment_recorder().record(
+                module=__name__,
+                action="TEXT CLEARED",
+                event_type="ButtonType.CLEAR",
+                text=self._text,
+            )
 
         # Clear text and reset cursor
         self._text = ""
@@ -234,10 +254,13 @@ class PisakDisplay(QLabel, EventEmitter):
         """Check if a character is part of a word (letter or digit)"""
         return char.isalnum()
 
-    def _is_cursor_inside_word(self) -> bool:
+    def is_cursor_inside_word(self) -> bool:
         """
         Check if cursor is inside a word.
         Cursor is inside a word if at least one adjacent character (left or right) is a letter or digit.
+
+        Public because callers need it to decide between replacing the current word
+        and inserting a new one (see `TextEditionHandler`).
         """
         if not self._text:
             return False
@@ -265,7 +288,7 @@ class PisakDisplay(QLabel, EventEmitter):
 
         If cursor is not inside a word, returns (cursor_index, cursor_index).
         """
-        if not self._is_cursor_inside_word():
+        if not self.is_cursor_inside_word():
             return (self._cursor_index, self._cursor_index)
 
         text = self._text
@@ -298,8 +321,12 @@ class PisakDisplay(QLabel, EventEmitter):
         """
         start, end = self._get_word_boundaries()
 
-        logger.debug(
-            f"WORD REPLACED,ButtonType.WORD,{new_word},{self._text[start:end+1]}"
+        get_experiment_recorder().record(
+            module=__name__,
+            action="WORD REPLACED",
+            event_type="ButtonType.WORD",
+            text=new_word,
+            additional=self._text[start : end + 1],
         )
 
         # Check if there's a space after the word being replaced
@@ -533,7 +560,7 @@ class TextEditionHandler:
             word_with_space = word + " "
 
             # Check if cursor is inside a word - if yes, replace the whole word
-            if self._text_display._is_cursor_inside_word():
+            if self._text_display.is_cursor_inside_word():
                 self._text_display.replace_current_word(word_with_space)
             else:
                 # Just insert the word at cursor position
