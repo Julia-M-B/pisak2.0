@@ -27,7 +27,6 @@ class WordColumnComponent(PisakColumnWidget):
         super().__init__(parent)
         self._add_header_image()
         self._words = words or []
-        # self._column = PisakColumnWidget(parent=self._parent)
         self._buttons = []
 
         self._create_word_buttons()
@@ -62,11 +61,6 @@ class WordColumnComponent(PisakColumnWidget):
 
         self.set_layout()
 
-    # @property
-    # def column(self):
-    #     """Get the column widget containing all word buttons"""
-    #     return self._column
-
     @property
     def buttons(self):
         """Get list of all word buttons"""
@@ -75,7 +69,10 @@ class WordColumnComponent(PisakColumnWidget):
     def update_words(self, new_words: list[str]):
         """
         Update the words displayed on the buttons.
-        This method is thread-safe and can be called from any thread.
+
+        Must be called from the main (UI) thread, like any Qt widget update.
+        Predictions arrive on a worker thread, so they are marshalled to the main
+        thread by `ThreadSafeEventAdapter` before reaching this method.
 
         :param new_words: List of new words to display
         """
@@ -89,4 +86,4 @@ class WordColumnComponent(PisakColumnWidget):
 
         # Update button texts
         for button, word in zip(self._buttons, new_words):
-            button.text = word
+            button.setText(word)
