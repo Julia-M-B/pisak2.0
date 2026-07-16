@@ -27,8 +27,6 @@ class AppEventType(Enum):
     CURSOR_MOVED_DOWN = auto()
     TEXT_CHANGED = auto()  # event: display text changed (text + cursor position)
     ITEM_POINTED = auto()
-    TEXT_SAVED = auto()
-    TEXT_UPLOADED = auto()
     READ_TEXT = auto()
 
     MODULE_EXITED = auto()

@@ -88,10 +88,6 @@ class ButtonManager(EventEmitter):
                     self.emit_event(
                         AppEvent(AppEventType.ITEM_POINTED, button.additional_data)
                     )
-            case ButtonType.SAVE:
-                self.emit_event(AppEvent(AppEventType.TEXT_SAVED))
-            case ButtonType.UPLOAD:
-                self.emit_event(AppEvent(AppEventType.TEXT_UPLOADED))
             case ButtonType.READ:
                 self.emit_event(AppEvent(AppEventType.READ_TEXT))
             case ButtonType.EXIT:

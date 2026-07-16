@@ -28,8 +28,6 @@ class ButtonType(Enum):
     SWITCHER = auto()
     CLEAR = auto()
     POINTER = auto()
-    SAVE = auto()
-    UPLOAD = auto()
     READ = auto()
     EXIT = auto()
 

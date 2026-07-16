@@ -3,9 +3,6 @@ Action buttons column component for the PisakSpeller module.
 Provides buttons for various text manipulation and control actions.
 """
 
-from datetime import datetime
-from pathlib import Path
-
 from PySide6 import QtGui
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
@@ -39,7 +36,6 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
 
         # Add some spacing between buttons
         self.layout.setSpacing(10)
-        # self.layout.addStretch()
 
     def _add_header_image(self):
         """Add the header image at the top of the column (non-scannable)"""
@@ -91,24 +87,6 @@ class ActionButtonsColumnComponent(PisakColumnWidget):
         )
         self.add_item(self._predictions_button)
 
-        # Save text button
-        self._save_button = PisakButton(
-            parent=self,
-            text="ZAPISZ\t",
-            icon=QtGui.QIcon(package_resource_path("resources/icons/zapisz.svg")),
-            button_type=ButtonType.SAVE,
-        )
-        self.add_item(self._save_button)
-
-        # Upload text button
-        self._upload_button = PisakButton(
-            parent=self,
-            text="WCZYTAJ\t",
-            icon=QtGui.QIcon(package_resource_path("resources/icons/wczytaj.svg")),
-            button_type=ButtonType.UPLOAD,
-        )
-        self.add_item(self._upload_button)
-
         # Read text button (reads the current text aloud)
         self._read_button = PisakButton(
             parent=self,
@@ -136,8 +114,6 @@ class ActionButtonsHandler:
         self._module = module
         self._scanning_manager = scanning_manager
         self._text_display = text_display
-        # Get or create default save directory on desktop
-        self._save_directory = self._get_save_directory()
 
         self._items_dict = {}
 
@@ -150,11 +126,7 @@ class ActionButtonsHandler:
         return self._text_display
 
     def handle_event(self, event: AppEvent) -> None:
-        if event.type == AppEventType.TEXT_SAVED:
-            self._on_save_clicked()
-        elif event.type == AppEventType.TEXT_UPLOADED:
-            self._on_upload_clicked()
-        elif event.type == AppEventType.ITEM_POINTED:
+        if event.type == AppEventType.ITEM_POINTED:
             pointed_item = event.data
             if not pointed_item:
                 return
@@ -169,119 +141,11 @@ class ActionButtonsHandler:
         elif event.type == AppEventType.MODULE_EXITED:
             self._on_exit_clicked()
 
-    @staticmethod
-    def _get_save_directory() -> Path:
-        """
-        Get the default save directory for text files.
-        Creates the 'app_texts' folder on the desktop if it doesn't exist.
-
-        :return: Path to the save directory
-        """
-        # Get user's home directory
-        home = Path.home()
-
-        # Create path to desktop folder (works on most Linux systems)
-        desktop = home / "Desktop"
-
-        # If Desktop doesn't exist, try localized names or fallback to home
-        if not desktop.exists():
-            # Try common localized names
-            for desktop_name in ["Pulpit", "Bureau", "Escritorio", "Schreibtisch"]:
-                alt_desktop = home / desktop_name
-                if alt_desktop.exists():
-                    desktop = alt_desktop
-                    break
-            else:
-                # Fallback to home directory
-                desktop = home
-
-        # Create app_texts directory
-        save_dir = desktop / "app_texts"
-        save_dir.mkdir(exist_ok=True)
-
-        return save_dir
-
-    def _on_save_clicked(self):
-        """
-        Handle save button click - saves text history to a file.
-        Creates a new file with timestamp in the filename.
-        """
-        if not self._text_display:
-            return
-
-        # Get current text and history
-        current_text = self._text_display.text
-        history = self._text_display.history.copy()
-
-        # If current text is not empty, add it to history for saving
-        if current_text:
-            history.append(current_text)
-
-        # If there's nothing to save, return
-        if not history:
-            logger.debug("No text to save")
-            return
-
-        # Create filename with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"app_texts_{timestamp}.txt"
-        filepath = self._save_directory / filename
-
-        try:
-            # Write history to file, with empty lines between entries
-            with open(filepath, "w", encoding="utf-8") as f:
-                for i, text_entry in enumerate(history):
-                    f.write(text_entry)
-                    # Add empty line between entries (but not after the last one)
-                    if i < len(history) - 1:
-                        f.write("\n\n")
-
-            logger.debug("Text saved to: %s", filepath)
-        except Exception as e:
-            logger.debug("Error saving text: %s", e)
-
     def _on_pointer_clicked(self, pointed_item):
         scannable_items = getattr(pointed_item, "scannable_items", [])
         if scannable_items:
             self._scanning_manager.stop_scanning()
             self._scanning_manager.start_scanning(pointed_item)
-
-    def _on_upload_clicked(self):
-        """
-        Handle upload button click - loads the last saved text file.
-        Finds the most recent app_texts_*.txt file and loads it into the display.
-        """
-        if not self._text_display:
-            return
-
-        try:
-            # Find all app_texts_*.txt files in the save directory
-            text_files = sorted(
-                self._save_directory.glob("app_texts_*.txt"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True,
-            )
-
-            if not text_files:
-                logger.debug("No saved text files found")
-                return
-
-            # Get the most recent file
-            latest_file = text_files[0]
-
-            # Read the file
-            with open(latest_file, "r", encoding="utf-8") as f:
-                content = f.read()
-
-            # Clear current text and set the loaded content
-            self._text_display._text = content
-            self._text_display._cursor_index = len(content)
-            self._text_display.update_display()
-            self._text_display.emit_text_changed()
-
-            logger.debug("Text loaded from: %s", latest_file)
-        except Exception as e:
-            logger.debug("Error loading text: %s", e)
 
     def _on_read_clicked(self):
         """

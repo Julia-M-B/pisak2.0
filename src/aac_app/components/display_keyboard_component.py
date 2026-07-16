@@ -29,8 +29,6 @@ class KeyboardDisplayComponent(PisakColumnWidget):
         self.add_item(self._display)
         self.add_item(self._keyboards)
 
-        # todo: create a function that would create and setup a keyboard for each config in keyboards_config_path
-
         # Create keyboards from config files
         uppercase_config = package_resource_path(
             "resources/keyboards_layout/uppercase_keyboard.yml"
