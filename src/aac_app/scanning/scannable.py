@@ -16,6 +16,18 @@ logger = get_module_logger(file_name="scanning", logger_name=__name__)
 
 
 class PisakScannableItem:
+    """
+    Interface for everything that can take part in switch-scanning.
+
+    Subclasses must implement `add_scannable_item`, `highlight_self` and
+    `reset_highlight_self`; the base versions raise NotImplementedError.
+
+    Note: this is deliberately a plain class rather than an `abc.ABC`. Its main
+    subclass, `PisakScannableWidget`, also inherits from QWidget, and mixing
+    ABCMeta with PySide6's Shiboken metaclass either raises a metaclass conflict
+    or - with a combined metaclass - silently fails to enforce @abstractmethod.
+    NotImplementedError is therefore the only mechanism that actually works here.
+    """
 
     def __init__(self, *args, **kwargs):
         self._id: str = self._get_id()
@@ -39,12 +51,26 @@ class PisakScannableItem:
         return self
 
     def __next__(self):
+        """
+        Return the next scannable child, wrapping around to the first one.
+
+        Scanning cycles endlessly over the children, so reaching the end restarts
+        the iteration. An item with no scannable children has nothing to return and
+        raises StopIteration - previously this restarted the empty iterator over and
+        over and blew the stack with a RecursionError.
+        """
+        if not self.scannable_items:
+            raise StopIteration
+
         try:
             item = next(self._iter_scannable_items)
-            self._iter_counter += 1
-            return item
         except StopIteration:
-            return next(iter(self))
+            # Wrap around: restart the iteration from the first child.
+            self._iter_scannable_items = iter(self.scannable_items)
+            item = next(self._iter_scannable_items)
+
+        self._iter_counter += 1
+        return item
 
     @property
     def scannable_items(self) -> list[Any]:
@@ -97,7 +123,12 @@ class PisakScannableWidget(QWidget, PisakScannableItem):
     """
 
     def __init__(self, parent):
-        super().__init__(parent)
+        # Both bases are initialised explicitly. A single `super().__init__(parent)`
+        # happens to work only because PySide6 forwards the call along the MRO, which
+        # is implicit behaviour of the Qt bindings rather than something we control.
+        # Being explicit keeps the scanning attributes initialised regardless.
+        QWidget.__init__(self, parent)
+        PisakScannableItem.__init__(self)
 
     def add_scannable_item(self, item) -> None:
         """
