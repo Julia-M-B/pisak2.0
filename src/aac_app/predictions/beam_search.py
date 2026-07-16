@@ -319,26 +319,28 @@ class WordPredictionBeamSearch:
         unfinished_word = unfinished_word.strip()
         if beam_init and not unfinished_word.startswith(self.start_new_word_char):
             unfinished_word = self.start_new_word_char + unfinished_word
-        pieces_probs = dict(zip(self.tokenizer.id2piece.values(), token_probs))
-        candidates = []
-        for piece, prob in pieces_probs.items():
-            new_prefix = current_prefix + piece
-            if new_prefix.startswith(unfinished_word) or unfinished_word.startswith(
-                new_prefix
-            ):
-                candidates.append((self.tokenizer.piece2id[piece], prob))
 
-        top_k = sorted(candidates, key=lambda x: x[1], reverse=True)[:k]
-        return top_k
+        # Walk ids and pieces together: building a {piece: prob} dict for the whole
+        # vocabulary on every call allocated a dict per beam step and forced a
+        # reverse piece->id lookup, even though the id is right here.
+        candidates = (
+            (token_id, prob)
+            for (token_id, piece), prob in zip(
+                self.tokenizer.id2piece.items(), token_probs
+            )
+            if (current_prefix + piece).startswith(unfinished_word)
+            or unfinished_word.startswith(current_prefix + piece)
+        )
+
+        # nlargest keeps only k items instead of sorting the whole vocabulary.
+        return heapq.nlargest(k, candidates, key=lambda pair: pair[1])
 
     @staticmethod
     def _get_top_tokens(token_probs: List[float], k: int) -> List[Tuple[int, float]]:
         """Get top-k tokens by probability."""
-        # Create list of (token_id, probability)
-        token_prob_pairs = [(i, prob) for i, prob in enumerate(token_probs)]
-        # Sort by probability (descending) and take top k
-        top_k = sorted(token_prob_pairs, key=lambda x: x[1], reverse=True)[:k]
-        return top_k
+        # nlargest is O(n log k); sorting the full vocabulary to then discard all
+        # but k entries was the most expensive step of each beam iteration.
+        return heapq.nlargest(k, enumerate(token_probs), key=lambda pair: pair[1])
 
     def get_word_probability(self, context_text: str, next_word: str):
         context_text = context_text.strip()
